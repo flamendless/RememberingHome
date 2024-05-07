@@ -15,7 +15,6 @@ func main() {
 
 	logger.Log().Info("Setting up resources loader...")
 	loader := assets.NewAssetsLoader()
-	assets.SetImageResources(loader)
 
 	logger.Log().Info("Launching game...")
 	game := game.NewGame(loader)

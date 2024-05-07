@@ -30,6 +30,8 @@ func NewAssetsLoader() *resource.Loader {
 		return f
 	}
 
+	SetImageResources(loader)
+
 	return loader
 }
 
