@@ -1,21 +1,19 @@
 package overlays
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 var (
 	mask     *ebiten.Image
 	vertices []ebiten.Vertex
-
 	curCount int
-	maxCount int
-	fadeDir  int
+
+	FadeAlphaMaxCount int
+	FadeAlpha         float32
 )
 
 func init() {
@@ -24,28 +22,29 @@ func init() {
 	mask = img.SubImage(image.Rect(1, 1, 2, 2)).(*ebiten.Image)
 	vertices = make([]ebiten.Vertex, 4)
 
-	curCount = 0
-	maxCount = 100
-	fadeDir = 1
+	curCount = 0 //0 = totally black
+	FadeAlphaMaxCount = 100
 }
 
-func UpdateFade() {
+func UpdateFade(fadeDir int) int {
 	curCount += fadeDir
 
-	if fadeDir == 1 && curCount > maxCount {
+	if fadeDir == 1 && curCount > FadeAlphaMaxCount {
 		fadeDir = -1
 	} else if fadeDir == -1 && curCount < 0 {
 		fadeDir = 1
 	}
+
+	return curCount
 }
 
 func DrawFade(screen *ebiten.Image) {
-	alpha := 1 - float32(curCount)/float32(maxCount)
+	FadeAlpha = 1 - float32(curCount)/float32(FadeAlphaMaxCount)
 
 	for i := range vertices {
 		vertices[i].SrcX = 1.0
 		vertices[i].SrcY = 1.0
-		vertices[i].ColorA = float32(alpha)
+		vertices[i].ColorA = float32(FadeAlpha)
 	}
 	bounds := screen.Bounds()
 	vertices[1].DstX = float32(bounds.Dx())
@@ -54,5 +53,4 @@ func DrawFade(screen *ebiten.Image) {
 	vertices[3].DstY = vertices[2].DstY
 
 	screen.DrawTriangles(vertices, []uint16{0, 1, 2, 1, 2, 3}, mask, nil)
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("%f", alpha), 0, 96)
 }

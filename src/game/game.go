@@ -25,11 +25,11 @@ func NewGame(
 	iconImg := loader.LoadImage(assets.ImageWindowIcon)
 	icons := []image.Image{iconImg.Data}
 
-	ebiten.SetWindowIcon(icons)
-	ebiten.SetWindowSize(conf.WINDOW_W, conf.WINDOW_H)
-
 	title := fmt.Sprintf("%s v%s", conf.GAME_TITLE, conf.GAME_VERSION)
 	ebiten.SetWindowTitle(title)
+	ebiten.SetWindowIcon(icons)
+	ebiten.SetWindowSize(conf.WINDOW_W, conf.WINDOW_H)
+	ebiten.SetFullscreen(conf.FULLSCREEN)
 
 	return &Game_State{
 		Loader:       loader,

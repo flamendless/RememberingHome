@@ -12,45 +12,40 @@ type Scene interface {
 	Draw(screen *ebiten.Image)
 }
 
-const transitionMaxCount = 20
-
 type Scene_Manager struct {
-	current         Scene
-	next            Scene
-	transitionCount int
+	current Scene
+	next    Scene
+	fadeDir int //1 = fading in, -1 fading out
 }
 
 func (s *Scene_Manager) Update() error {
-	overlays.UpdateFade()
+	count := overlays.UpdateFade(s.fadeDir)
 
-	if s.transitionCount == 0 {
-		return s.current.Update()
+	if s.fadeDir == 1 && count >= overlays.FadeAlphaMaxCount {
+		if s.next == nil {
+			s.fadeDir = 0
+		} else {
+			s.fadeDir = -1
+			s.current = s.next
+			s.next = nil
+		}
+	} else if s.fadeDir == -1 && count <= 0 {
+		panic(1)
 	}
 
-	s.transitionCount--
-	if s.transitionCount > 0 {
-		return nil
-	}
-
-	s.current = s.next
-	s.next = nil
-	return nil
+	return s.current.Update()
 }
 
 func (s *Scene_Manager) Draw(screen *ebiten.Image) {
-	if s.transitionCount == 0 {
-		s.current.Draw(screen)
-		return
-	}
-
+	s.current.Draw(screen)
 	overlays.DrawFade(screen)
 }
 
 func (s *Scene_Manager) GoTo(scene Scene) {
+	s.fadeDir = 1
 	if s.current == nil {
 		s.current = scene
 	} else {
 		s.next = scene
-		s.transitionCount = transitionMaxCount
 	}
 }
