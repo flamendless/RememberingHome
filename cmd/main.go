@@ -17,9 +17,14 @@ func main() {
 	loader := assets.NewAssetsLoader()
 
 	logger.Log().Info("Launching game...")
-	game := game.NewGame(loader)
+	sceneManager := &game.Scene_Manager{}
+	gameState := game.NewGame(loader, sceneManager)
 
-	if err := ebiten.RunGame(game); err != nil {
+	sceneManager.GoTo(&game.Splash_Scene{
+		GameState: gameState,
+	})
+
+	if err := ebiten.RunGame(gameState); err != nil {
 		logger.Log().Fatal(err.Error())
 	}
 }

@@ -1,4 +1,4 @@
-package scenes
+package game
 
 import (
 	"nowhere-home/src/overlays"
@@ -7,31 +7,24 @@ import (
 )
 
 type Scene interface {
-	Update(state *GameState) error
+	GetName() string
+	Update() error
 	Draw(screen *ebiten.Image)
 }
 
 const transitionMaxCount = 20
 
-type GameState struct {
-	SceneManager *SceneManager
-	// Input        *Input
-}
-
-type SceneManager struct {
+type Scene_Manager struct {
 	current         Scene
 	next            Scene
 	transitionCount int
 }
 
-func (s *SceneManager) Update() error {
+func (s *Scene_Manager) Update() error {
 	overlays.UpdateFade()
 
 	if s.transitionCount == 0 {
-		return s.current.Update(&GameState{
-			SceneManager: s,
-			// Input:        input,
-		})
+		return s.current.Update()
 	}
 
 	s.transitionCount--
@@ -44,7 +37,7 @@ func (s *SceneManager) Update() error {
 	return nil
 }
 
-func (s *SceneManager) Draw(screen *ebiten.Image) {
+func (s *Scene_Manager) Draw(screen *ebiten.Image) {
 	if s.transitionCount == 0 {
 		s.current.Draw(screen)
 		return
@@ -53,7 +46,7 @@ func (s *SceneManager) Draw(screen *ebiten.Image) {
 	overlays.DrawFade(screen)
 }
 
-func (s *SceneManager) GoTo(scene Scene) {
+func (s *Scene_Manager) GoTo(scene Scene) {
 	if s.current == nil {
 		s.current = scene
 	} else {
