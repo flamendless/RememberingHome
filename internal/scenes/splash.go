@@ -1,8 +1,8 @@
 package scenes
 
 import (
-	// "somewhere-home/internal/assets"
-	// "somewhere-home/internal/conf"
+	// "nowhere-home/internal/assets"
+	// "nowhere-home/internal/conf"
 
 	// "fmt"
 

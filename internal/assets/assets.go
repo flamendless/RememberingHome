@@ -3,7 +3,7 @@ package assets
 import (
 	"embed"
 	"io"
-	"somewhere-home/internal/logger"
+	"nowhere-home/internal/logger"
 
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	resource "github.com/quasilyte/ebitengine-resource"

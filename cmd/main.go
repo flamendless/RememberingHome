@@ -1,10 +1,10 @@
 package main
 
 import (
-	"somewhere-home/internal/assets"
-	"somewhere-home/internal/conf"
-	"somewhere-home/internal/game"
-	"somewhere-home/internal/logger"
+	"nowhere-home/internal/assets"
+	"nowhere-home/internal/conf"
+	"nowhere-home/internal/game"
+	"nowhere-home/internal/logger"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )

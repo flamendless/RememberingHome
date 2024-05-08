@@ -3,9 +3,9 @@ package game
 import (
 	"fmt"
 	"image"
-	"somewhere-home/internal/assets"
-	"somewhere-home/internal/conf"
-	"somewhere-home/internal/overlays"
+	"nowhere-home/internal/assets"
+	"nowhere-home/internal/conf"
+	"nowhere-home/internal/overlays"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	resource "github.com/quasilyte/ebitengine-resource"

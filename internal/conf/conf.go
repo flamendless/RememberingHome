@@ -2,7 +2,7 @@ package conf
 
 import (
 	"flag"
-	"somewhere-home/internal/logger"
+	"nowhere-home/internal/logger"
 
 	"go.uber.org/zap"
 )
@@ -12,7 +12,7 @@ var (
 )
 
 const (
-	GAME_TITLE   = "Somewhere Home"
+	GAME_TITLE   = "Nowhere Home"
 	GAME_VERSION = "0.0.1"
 	WINDOW_W     = 640
 	WINDOW_H     = 480
