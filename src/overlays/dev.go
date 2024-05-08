@@ -20,10 +20,14 @@ func init() {
 	strGameVer = fmt.Sprintf("VERSION: %s\n", conf.GAME_VERSION)
 }
 
-func UpdateDebug(sceneName string) {
+func UpdateDebug(sceneName string, nextSceneName string) {
 	strFPS = fmt.Sprintf("FPS: %.2f\n", ebiten.ActualFPS())
 	strTPS = fmt.Sprintf("TPS: %.2f\n", ebiten.ActualTPS())
-	strScene = fmt.Sprintf("Scene: %s\n", sceneName)
+	if nextSceneName == "" {
+		strScene = fmt.Sprintf("Scene: %s\n", sceneName)
+	} else {
+		strScene = fmt.Sprintf("Scene: %s, Next: %s\n", sceneName, nextSceneName)
+	}
 	strFadeOverlay = fmt.Sprintf("Overlay: %.2f\n", FadeAlpha)
 }
 

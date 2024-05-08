@@ -8,10 +8,13 @@ import (
 	"nowhere-home/src/overlays"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	resource "github.com/quasilyte/ebitengine-resource"
 )
 
-var WSLTricked bool
+var (
+	WSLTricked bool
+)
 
 type Game_State struct {
 	Loader       *resource.Loader
@@ -53,7 +56,18 @@ func (g *Game_State) Update() error {
 			WSLTricked = true
 		}
 
-		overlays.UpdateDebug(g.SceneManager.current.GetName())
+		if inpututil.IsKeyJustReleased(ebiten.Key1) {
+			g.SceneManager.GoTo(&Dummy_Scene{GameState: g})
+		} else if inpututil.IsKeyJustReleased(ebiten.Key2) {
+			g.SceneManager.GoTo(&Splash_Scene{GameState: g})
+		}
+
+		nextSceneName := ""
+		if g.SceneManager.next != nil {
+			nextSceneName = g.SceneManager.next.GetName()
+		}
+
+		overlays.UpdateDebug(g.SceneManager.current.GetName(), nextSceneName)
 	}
 
 	return nil

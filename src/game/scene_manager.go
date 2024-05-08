@@ -13,9 +13,10 @@ type Scene interface {
 }
 
 type Scene_Manager struct {
-	current Scene
-	next    Scene
-	fadeDir int //1 = fading in, -1 fading out
+	GameState *Game_State
+	current   Scene
+	next      Scene
+	fadeDir   int //1 = fading in, -1 fading out
 }
 
 func (s *Scene_Manager) Update() error {
@@ -30,7 +31,13 @@ func (s *Scene_Manager) Update() error {
 			s.next = nil
 		}
 	} else if s.fadeDir == -1 && count <= 0 {
-		panic(1)
+		if s.next == nil {
+			s.fadeDir = 0
+		} else {
+			s.fadeDir = 1
+			s.current = s.next
+			s.next = nil
+		}
 	}
 
 	return s.current.Update()
@@ -42,10 +49,11 @@ func (s *Scene_Manager) Draw(screen *ebiten.Image) {
 }
 
 func (s *Scene_Manager) GoTo(scene Scene) {
-	s.fadeDir = 1
 	if s.current == nil {
+		s.fadeDir = 1
 		s.current = scene
 	} else {
+		s.fadeDir = -1
 		s.next = scene
 	}
 }
