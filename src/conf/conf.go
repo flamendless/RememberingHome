@@ -2,7 +2,7 @@ package conf
 
 import (
 	"flag"
-	"nowhere-home/internal/logger"
+	"nowhere-home/src/logger"
 
 	"go.uber.org/zap"
 )

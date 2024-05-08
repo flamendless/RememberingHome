@@ -1,10 +1,10 @@
 package main
 
 import (
-	"nowhere-home/internal/assets"
-	"nowhere-home/internal/conf"
-	"nowhere-home/internal/game"
-	"nowhere-home/internal/logger"
+	"nowhere-home/src/assets"
+	"nowhere-home/src/conf"
+	"nowhere-home/src/game"
+	"nowhere-home/src/logger"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )

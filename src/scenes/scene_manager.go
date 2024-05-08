@@ -1,7 +1,7 @@
 package scenes
 
 import (
-	"nowhere-home/internal/overlays"
+	"nowhere-home/src/overlays"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )

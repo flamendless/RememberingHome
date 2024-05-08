@@ -2,7 +2,7 @@ package overlays
 
 import (
 	"fmt"
-	"nowhere-home/internal/conf"
+	"nowhere-home/src/conf"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"

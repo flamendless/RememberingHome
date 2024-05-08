@@ -1,8 +1,8 @@
 package scenes
 
 import (
-	// "nowhere-home/internal/assets"
-	// "nowhere-home/internal/conf"
+	// "nowhere-home/src/assets"
+	// "nowhere-home/src/conf"
 
 	// "fmt"
 
