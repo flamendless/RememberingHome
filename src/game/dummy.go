@@ -20,7 +20,7 @@ func (scene *Dummy_Scene) Update() error {
 }
 
 func (scene *Dummy_Scene) Draw(screen *ebiten.Image) {
-	logo := scene.GameState.Loader.LoadImage(assets.ImageFlamendlessLogo)
+	logo := scene.GameState.Loader.LoadImage(assets.ImageFlamLogo)
 	op := &ebiten.DrawImageOptions{}
 	size := logo.Data.Bounds().Size()
 	op.GeoM.Rotate(0.5)

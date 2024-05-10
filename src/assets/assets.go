@@ -12,11 +12,24 @@ import (
 //go:embed data
 var gameAssets embed.FS
 
+type FrameData struct {
+	W, H, Count int
+}
+
 const (
 	ImageNone resource.ImageID = iota
 	ImageWindowIcon
-	ImageFlamendlessLogo
+	ImageFlamLogo
+	ImageSheetWits
 )
+
+var (
+	SheetWitsFrameData FrameData
+)
+
+func init() {
+	SheetWitsFrameData = FrameData{W: 256, H: 128, Count: 3}
+}
 
 func NewAssetsLoader() *resource.Loader {
 	audioCtx := audio.NewContext(44100)
@@ -37,8 +50,9 @@ func NewAssetsLoader() *resource.Loader {
 
 func SetImageResources(loader *resource.Loader) {
 	imageResources := map[resource.ImageID]resource.ImageInfo{
-		ImageWindowIcon:      {Path: "icon.png"},
-		ImageFlamendlessLogo: {Path: "logo_flamendless.png"},
+		ImageWindowIcon: {Path: "icon.png"},
+		ImageFlamLogo:   {Path: "logo_flamendless.png"},
+		ImageSheetWits:  {Path: "sheet_wits.png"},
 	}
 	for id, res := range imageResources {
 		loader.ImageRegistry.Set(id, res)
