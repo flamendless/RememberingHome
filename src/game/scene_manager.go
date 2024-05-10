@@ -20,9 +20,9 @@ type Scene_Manager struct {
 }
 
 func (s *Scene_Manager) Update() error {
-	count := overlays.UpdateFade(s.fadeDir)
+	overlays.UpdateFade(s.fadeDir)
 
-	if s.fadeDir == 1 && count >= overlays.FadeAlphaMaxCount {
+	if s.fadeDir == 1 && overlays.IsFadeInFinished() {
 		if s.next == nil {
 			s.fadeDir = 0
 		} else {
@@ -30,7 +30,7 @@ func (s *Scene_Manager) Update() error {
 			s.current = s.next
 			s.next = nil
 		}
-	} else if s.fadeDir == -1 && count <= 0 {
+	} else if s.fadeDir == -1 && overlays.IsFadeOutFinished() {
 		if s.next == nil {
 			s.fadeDir = 0
 		} else {

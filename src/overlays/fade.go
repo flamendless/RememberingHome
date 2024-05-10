@@ -26,7 +26,15 @@ func init() {
 	FadeAlphaMaxCount = 100
 }
 
-func UpdateFade(fadeDir int) int {
+func IsFadeInFinished() bool {
+	return curCount >= FadeAlphaMaxCount
+}
+
+func IsFadeOutFinished() bool {
+	return curCount <= 0
+}
+
+func UpdateFade(fadeDir int) {
 	curCount += fadeDir
 
 	if fadeDir == 1 && curCount > FadeAlphaMaxCount {
@@ -34,8 +42,6 @@ func UpdateFade(fadeDir int) int {
 	} else if fadeDir == -1 && curCount < 0 {
 		fadeDir = 1
 	}
-
-	return curCount
 }
 
 func DrawFade(screen *ebiten.Image) {

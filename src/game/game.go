@@ -45,8 +45,6 @@ func (g *Game_State) Layout(outsideWidth, outsideHeight int) (screenWidth, scree
 }
 
 func (g *Game_State) Update() error {
-	g.SceneManager.Update()
-
 	if conf.DEV {
 		//trick for WSL2
 		if !WSLTricked && !ebiten.IsFocused() {
@@ -70,10 +68,20 @@ func (g *Game_State) Update() error {
 		overlays.UpdateDebug(g.SceneManager.current.GetName(), nextSceneName)
 	}
 
+	if !ebiten.IsFocused() {
+		return nil
+	}
+
+	g.SceneManager.Update()
+
 	return nil
 }
 
 func (g *Game_State) Draw(screen *ebiten.Image) {
+	if !ebiten.IsFocused() {
+		return
+	}
+
 	g.SceneManager.Draw(screen)
 
 	if conf.DEV {
