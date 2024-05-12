@@ -7,7 +7,10 @@
 set -euf -o pipefail
 
 run() {
-	GOOS=windows go build -o out/game.exe ./cmd/main.go && cp out/game.exe /mnt/c/Users/flame/game.exe && /mnt/c/Users/flame/game.exe --dev
+	GOOS=windows \
+		go build -o out/game.exe ./cmd/main.go \
+		&& cp out/game.exe /mnt/c/Users/flame/game.exe \
+		&& /mnt/c/Users/flame/game.exe --dev
 }
 
 if [ "$#" -eq 0 ]; then
