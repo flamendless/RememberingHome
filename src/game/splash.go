@@ -33,12 +33,25 @@ func NewSplashScene(gameState *Game_State) *Splash_Scene {
 	splashScene := Splash_Scene{
 		GameState: gameState,
 	}
-	resFlamLogo := gameState.Loader.LoadImage(assets.ImageFlamLogo)
-	splashScene.FlamLogoAnim = NewAnimationPlayer(resFlamLogo.Data)
-	splashScene.FlamLogoAnim.AddStateAnimation("static", 0, 0, resFlamLogo.Data.Bounds().Max.X, resFlamLogo.Data.Bounds().Max.Y, 1, false)
 
+	resFlamLogo := gameState.Loader.LoadImage(assets.ImageFlamLogo)
 	resWits := gameState.Loader.LoadImage(assets.ImageSheetWits)
+
+	sizeFlamLogo := resFlamLogo.Data.Bounds()
+	scaleFlamLogo := float64(min(conf.GAME_W*0.7/sizeFlamLogo.Max.X, conf.GAME_H*0.7/sizeFlamLogo.Max.Y))
+
 	witsFrameX, witsFrameY := assets.SheetWitsFrameData.W, assets.SheetWitsFrameData.H
+	scaleWitsAnim := float64(min(conf.GAME_W/witsFrameX, conf.GAME_H/witsFrameY))
+
+	splashScene.FlamLogoAnim = NewAnimationPlayer(resFlamLogo.Data)
+	splashScene.FlamLogoAnim.AddStateAnimation("static", 0, 0, sizeFlamLogo.Max.X, sizeFlamLogo.Max.Y, 1, false)
+
+	splashScene.FlamLogoAnim.DIO.GeoM.Scale(scaleFlamLogo, scaleFlamLogo)
+	splashScene.FlamLogoAnim.DIO.GeoM.Translate(
+		float64(conf.GAME_W/2-sizeFlamLogo.Max.X*int(scaleFlamLogo)/2),
+		float64(conf.GAME_H/2-sizeFlamLogo.Max.Y*int(scaleFlamLogo)/2),
+	)
+
 	splashScene.WitsAnim = NewAnimationPlayer(resWits.Data)
 	splashScene.WitsAnim.AddStateAnimation("row1", 0, 0, witsFrameX, witsFrameY, assets.SheetWitsFrameData.Count, false)
 	splashScene.WitsAnim.AddStateAnimation("row2", 0, 128, witsFrameX, witsFrameY, assets.SheetWitsFrameData.Count, false)
@@ -46,6 +59,12 @@ func NewSplashScene(gameState *Game_State) *Splash_Scene {
 	splashScene.WitsAnim.AddStateAnimation("row4", 0, 384, witsFrameX, witsFrameY, assets.SheetWitsFrameData.Count, false)
 	splashScene.WitsAnim.SetFPS(7)
 	splashScene.WitsAnim.SetStateReset("row1")
+
+	splashScene.WitsAnim.DIO.GeoM.Scale(scaleWitsAnim, scaleWitsAnim)
+	splashScene.WitsAnim.DIO.GeoM.Translate(
+		float64(conf.GAME_W/2-float64(witsFrameX)*scaleWitsAnim/2),
+		float64(conf.GAME_H/2-float64(witsFrameY)*scaleWitsAnim/2),
+	)
 
 	sceneRoutine := routine.New()
 	sceneRoutine.Define(
@@ -109,26 +128,8 @@ func (scene *Splash_Scene) Update() error {
 }
 
 func (scene *Splash_Scene) Draw(screen *ebiten.Image) {
-	resFlam := scene.GameState.Loader.LoadImage(assets.ImageFlamLogo)
-	sizeFlam := resFlam.Data.Bounds().Size()
-	opFlam := &ebiten.DrawImageOptions{}
-	opFlam.GeoM.Translate(
-		float64(conf.GAME_W/2-sizeFlam.X/2),
-		float64(conf.GAME_H/2-sizeFlam.Y/2),
-	)
-	screen.DrawImage(scene.FlamLogoAnim.CurrentFrame, opFlam)
-
+	screen.DrawImage(scene.FlamLogoAnim.CurrentFrame, scene.FlamLogoAnim.DIO)
 	if scene.ShowWits {
-		witsFrameX, witsFrameY := assets.SheetWitsFrameData.W, assets.SheetWitsFrameData.H
-		targetW, targetH := int(conf.GAME_W*0.75), int(conf.GAME_H*0.75)
-		scale := float64(min(targetW/witsFrameX, targetH/witsFrameY))
-		opWits := &ebiten.DrawImageOptions{}
-		opWits.GeoM.Scale(scale, scale)
-		opWits.GeoM.Translate(
-			float64(conf.GAME_W/2-float64(witsFrameX)*scale/2),
-			float64(conf.GAME_H/2-float64(witsFrameY)*scale/2),
-		)
-
-		screen.DrawImage(scene.WitsAnim.CurrentFrame, opWits)
+		screen.DrawImage(scene.WitsAnim.CurrentFrame, scene.WitsAnim.DIO)
 	}
 }
