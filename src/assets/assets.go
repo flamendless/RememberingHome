@@ -13,7 +13,7 @@ import (
 var gameAssets embed.FS
 
 type FrameData struct {
-	W, H, Count int
+	W, H, MaxCols int
 }
 
 const (
@@ -21,14 +21,19 @@ const (
 	ImageWindowIcon
 	ImageFlamLogo
 	ImageSheetWits
+	ImageSheetDesk
+	ImageBGDoor
+	ImageBGHallway
 )
 
 var (
 	SheetWitsFrameData FrameData
+	SheetDeskFrameData FrameData
 )
 
 func init() {
-	SheetWitsFrameData = FrameData{W: 256, H: 128, Count: 3}
+	SheetWitsFrameData = FrameData{W: 256, H: 128, MaxCols: 3}
+	SheetDeskFrameData = FrameData{W: 256, H: 64, MaxCols: 3}
 }
 
 func NewAssetsLoader() *resource.Loader {
@@ -51,8 +56,13 @@ func NewAssetsLoader() *resource.Loader {
 func SetImageResources(loader *resource.Loader) {
 	imageResources := map[resource.ImageID]resource.ImageInfo{
 		ImageWindowIcon: {Path: "icon.png"},
-		ImageFlamLogo:   {Path: "logo_flamendless.png"},
-		ImageSheetWits:  {Path: "sheet_wits.png"},
+
+		ImageFlamLogo:  {Path: "splash/logo_flamendless.png"},
+		ImageSheetWits: {Path: "splash/sheet_wits.png"},
+
+		ImageSheetDesk: {Path: "main_menu/sheet_desk.png"},
+		ImageBGDoor:    {Path: "main_menu/bg_door.png"},
+		ImageBGHallway: {Path: "main_menu/bg_hallway.png"},
 	}
 	for id, res := range imageResources {
 		loader.ImageRegistry.Set(id, res)

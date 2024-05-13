@@ -45,9 +45,11 @@ func UpdateDebugInput(g *Game_State) {
 	if inpututil.IsKeyJustReleased(ebiten.KeyD) {
 		Show = !Show
 	} else if inpututil.IsKeyJustReleased(ebiten.Key1) {
-		g.SceneManager.GoTo(&Dummy_Scene{GameState: g})
+		g.SceneManager.GoTo(NewDummyScene(g))
 	} else if inpututil.IsKeyJustReleased(ebiten.Key2) {
-		g.SceneManager.GoTo(&Splash_Scene{GameState: g})
+		g.SceneManager.GoTo(NewSplashScene(g))
+	} else if inpututil.IsKeyJustReleased(ebiten.Key3) {
+		g.SceneManager.GoTo(NewMainMenuScene(g))
 	}
 }
 

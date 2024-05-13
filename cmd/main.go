@@ -20,7 +20,9 @@ func main() {
 	sceneManager := &game.Scene_Manager{}
 	gameState := game.NewGame(loader, sceneManager)
 
-	sceneManager.GoTo(game.NewSplashScene(gameState))
+	// sceneManager.GoTo(game.NewDummyScene(gameState))
+	// sceneManager.GoTo(game.NewSplashScene(gameState))
+	sceneManager.GoTo(game.NewMainMenuScene(gameState))
 
 	if err := ebiten.RunGame(gameState); err != nil {
 		logger.Log().Fatal(err.Error())

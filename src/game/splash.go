@@ -30,47 +30,44 @@ func (scene Splash_Scene) GetStateName() string {
 }
 
 func NewSplashScene(gameState *Game_State) *Splash_Scene {
-	splashScene := Splash_Scene{
+	scene := Splash_Scene{
 		GameState: gameState,
 	}
 
 	resFlamLogo := gameState.Loader.LoadImage(assets.ImageFlamLogo)
-	resWits := gameState.Loader.LoadImage(assets.ImageSheetWits)
-
 	sizeFlamLogo := resFlamLogo.Data.Bounds()
+	scene.FlamLogoAnim = NewAnimationPlayer(resFlamLogo.Data)
+	scene.FlamLogoAnim.AddStateAnimation("static", 0, 0, sizeFlamLogo.Max.X, sizeFlamLogo.Max.Y, 1, false)
+
 	scaleFlamLogo := float64(min(conf.GAME_W*0.7/sizeFlamLogo.Max.X, conf.GAME_H*0.7/sizeFlamLogo.Max.Y))
-
-	witsFrameX, witsFrameY := assets.SheetWitsFrameData.W, assets.SheetWitsFrameData.H
-	scaleWitsAnim := float64(min(conf.GAME_W/witsFrameX, conf.GAME_H/witsFrameY))
-
-	splashScene.FlamLogoAnim = NewAnimationPlayer(resFlamLogo.Data)
-	splashScene.FlamLogoAnim.AddStateAnimation("static", 0, 0, sizeFlamLogo.Max.X, sizeFlamLogo.Max.Y, 1, false)
-
-	splashScene.FlamLogoAnim.DIO.GeoM.Scale(scaleFlamLogo, scaleFlamLogo)
-	splashScene.FlamLogoAnim.DIO.GeoM.Translate(
+	scene.FlamLogoAnim.DIO.GeoM.Scale(scaleFlamLogo, scaleFlamLogo)
+	scene.FlamLogoAnim.DIO.GeoM.Translate(
 		float64(conf.GAME_W/2-sizeFlamLogo.Max.X*int(scaleFlamLogo)/2),
 		float64(conf.GAME_H/2-sizeFlamLogo.Max.Y*int(scaleFlamLogo)/2),
 	)
 
-	splashScene.WitsAnim = NewAnimationPlayer(resWits.Data)
-	splashScene.WitsAnim.AddStateAnimation("row1", 0, 0, witsFrameX, witsFrameY, assets.SheetWitsFrameData.Count, false)
-	splashScene.WitsAnim.AddStateAnimation("row2", 0, 128, witsFrameX, witsFrameY, assets.SheetWitsFrameData.Count, false)
-	splashScene.WitsAnim.AddStateAnimation("row3", 0, 256, witsFrameX, witsFrameY, assets.SheetWitsFrameData.Count, false)
-	splashScene.WitsAnim.AddStateAnimation("row4", 0, 384, witsFrameX, witsFrameY, assets.SheetWitsFrameData.Count, false)
-	splashScene.WitsAnim.SetFPS(7)
-	splashScene.WitsAnim.SetStateReset("row1")
+	resWits := gameState.Loader.LoadImage(assets.ImageSheetWits)
+	witsFrameW, witsFrameH := assets.SheetWitsFrameData.W, assets.SheetWitsFrameData.H
+	scene.WitsAnim = NewAnimationPlayer(resWits.Data)
+	scene.WitsAnim.AddStateAnimation("row1", 0, 0, witsFrameW, witsFrameH, assets.SheetWitsFrameData.MaxCols, false)
+	scene.WitsAnim.AddStateAnimation("row2", 0, 128, witsFrameW, witsFrameH, assets.SheetWitsFrameData.MaxCols, false)
+	scene.WitsAnim.AddStateAnimation("row3", 0, 256, witsFrameW, witsFrameH, assets.SheetWitsFrameData.MaxCols, false)
+	scene.WitsAnim.AddStateAnimation("row4", 0, 384, witsFrameW, witsFrameH, assets.SheetWitsFrameData.MaxCols, false)
+	scene.WitsAnim.SetFPS(7)
+	scene.WitsAnim.SetStateReset("row1")
 
-	splashScene.WitsAnim.DIO.GeoM.Scale(scaleWitsAnim, scaleWitsAnim)
-	splashScene.WitsAnim.DIO.GeoM.Translate(
-		float64(conf.GAME_W/2-float64(witsFrameX)*scaleWitsAnim/2),
-		float64(conf.GAME_H/2-float64(witsFrameY)*scaleWitsAnim/2),
+	scaleWitsAnim := float64(min(conf.GAME_W/witsFrameW, conf.GAME_H/witsFrameH))
+	scene.WitsAnim.DIO.GeoM.Scale(scaleWitsAnim, scaleWitsAnim)
+	scene.WitsAnim.DIO.GeoM.Translate(
+		float64(conf.GAME_W/2-float64(witsFrameW)*scaleWitsAnim/2),
+		float64(conf.GAME_H/2-float64(witsFrameH)*scaleWitsAnim/2),
 	)
 
 	sceneRoutine := routine.New()
 	sceneRoutine.Define(
 		"splash scene",
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
-			splashScene.CurrentStateName = "flamendless logo fading in"
+			scene.CurrentStateName = "flamendless logo fading in"
 			if overlays.IsFadeInFinished() {
 				return routine.FlowNext
 			}
@@ -78,29 +75,29 @@ func NewSplashScene(gameState *Game_State) *Splash_Scene {
 		}),
 		actions.NewWait(time.Second*2),
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
-			splashScene.CurrentStateName = "wits animation showing"
-			splashScene.ShowWits = true
+			scene.CurrentStateName = "wits animation showing"
+			scene.ShowWits = true
 			return routine.FlowNext
 		}),
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
-			if splashScene.FinishedWits {
-				splashScene.CurrentStateName = "wits waiting"
+			if scene.FinishedWits {
+				scene.CurrentStateName = "wits waiting"
 				return routine.FlowNext
 			}
-			splashScene.CurrentStateName = "wits animating"
+			scene.CurrentStateName = "wits animating"
 			return routine.FlowIdle
 		}),
 		actions.NewWait(time.Second/2),
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
-			splashScene.CurrentStateName = "wits fading out"
-			splashScene.GameState.SceneManager.GoTo(&Dummy_Scene{GameState: splashScene.GameState})
+			scene.CurrentStateName = "wits fading out"
+			scene.GameState.SceneManager.GoTo(NewMainMenuScene(scene.GameState))
 			return routine.FlowIdle
 		}),
 	)
 	sceneRoutine.Run()
-	splashScene.Routine = sceneRoutine
+	scene.Routine = sceneRoutine
 
-	return &splashScene
+	return &scene
 }
 
 func (scene *Splash_Scene) Update() error {
@@ -110,7 +107,7 @@ func (scene *Splash_Scene) Update() error {
 
 	if scene.ShowWits {
 		scene.WitsAnim.Update()
-		if scene.WitsAnim.CurrentFrameIndex == 2 {
+		if scene.WitsAnim.CurrentFrameIndex == scene.WitsAnim.GetLastFrameCount() {
 			switch scene.WitsAnim.State() {
 			case "row1":
 				scene.WitsAnim.SetStateReset("row2")
@@ -119,7 +116,7 @@ func (scene *Splash_Scene) Update() error {
 			case "row3":
 				scene.WitsAnim.SetStateReset("row4")
 			case "row4":
-				scene.WitsAnim.PauseAtFrame(2)
+				scene.WitsAnim.PauseAtFrame(assets.SheetWitsFrameData.MaxCols-1)
 				scene.FinishedWits = true
 			}
 		}
