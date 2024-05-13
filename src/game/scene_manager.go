@@ -8,6 +8,7 @@ import (
 
 type Scene interface {
 	GetName() string
+	GetStateName() string
 	Update() error
 	Draw(screen *ebiten.Image)
 }

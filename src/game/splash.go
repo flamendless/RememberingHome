@@ -12,15 +12,21 @@ import (
 )
 
 type Splash_Scene struct {
-	GameState    *Game_State
-	Routine      *routine.Routine
-	FlamLogoAnim *AnimationPlayer
-	WitsAnim     *AnimationPlayer
-	ShowWits     bool
+	GameState        *Game_State
+	Routine          *routine.Routine
+	FlamLogoAnim     *AnimationPlayer
+	WitsAnim         *AnimationPlayer
+	ShowWits         bool
+	FinishedWits     bool
+	CurrentStateName string
 }
 
 func (scene Splash_Scene) GetName() string {
 	return "Splash"
+}
+
+func (scene Splash_Scene) GetStateName() string {
+	return scene.CurrentStateName
 }
 
 func NewSplashScene(gameState *Game_State) *Splash_Scene {
@@ -43,18 +49,32 @@ func NewSplashScene(gameState *Game_State) *Splash_Scene {
 
 	sceneRoutine := routine.New()
 	sceneRoutine.Define(
-		"scene",
+		"splash scene",
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
+			splashScene.CurrentStateName = "flamendless logo fading in"
 			if overlays.IsFadeInFinished() {
 				return routine.FlowNext
 			}
 			return routine.FlowIdle
 		}),
-
 		actions.NewWait(time.Second*2),
-
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
+			splashScene.CurrentStateName = "wits animation showing"
 			splashScene.ShowWits = true
+			return routine.FlowNext
+		}),
+		actions.NewFunction(func(block *routine.Block) routine.Flow {
+			if splashScene.FinishedWits {
+				splashScene.CurrentStateName = "wits waiting"
+				return routine.FlowNext
+			}
+			splashScene.CurrentStateName = "wits animating"
+			return routine.FlowIdle
+		}),
+		actions.NewWait(time.Second/2),
+		actions.NewFunction(func(block *routine.Block) routine.Flow {
+			splashScene.CurrentStateName = "wits fading out"
+			splashScene.GameState.SceneManager.GoTo(&Dummy_Scene{GameState: splashScene.GameState})
 			return routine.FlowIdle
 		}),
 	)
@@ -81,6 +101,7 @@ func (scene *Splash_Scene) Update() error {
 				scene.WitsAnim.SetStateReset("row4")
 			case "row4":
 				scene.WitsAnim.PauseAtFrame(2)
+				scene.FinishedWits = true
 			}
 		}
 	}
@@ -99,7 +120,8 @@ func (scene *Splash_Scene) Draw(screen *ebiten.Image) {
 
 	if scene.ShowWits {
 		witsFrameX, witsFrameY := assets.SheetWitsFrameData.W, assets.SheetWitsFrameData.H
-		scale := min(float64(conf.GAME_W/witsFrameX), float64(conf.GAME_H/witsFrameY))
+		targetW, targetH := int(conf.GAME_W*0.75), int(conf.GAME_H*0.75)
+		scale := float64(min(targetW/witsFrameX, targetH/witsFrameY))
 		opWits := &ebiten.DrawImageOptions{}
 		opWits.GeoM.Scale(scale, scale)
 		opWits.GeoM.Translate(

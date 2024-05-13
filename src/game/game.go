@@ -5,15 +5,9 @@ import (
 	"image"
 	"nowhere-home/src/assets"
 	"nowhere-home/src/conf"
-	"nowhere-home/src/overlays"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	resource "github.com/quasilyte/ebitengine-resource"
-)
-
-var (
-	WSLTricked bool
 )
 
 type Game_State struct {
@@ -46,26 +40,9 @@ func (g *Game_State) Layout(outsideWidth, outsideHeight int) (screenWidth, scree
 
 func (g *Game_State) Update() error {
 	if conf.DEV {
-		//trick for WSL2
-		if !WSLTricked && !ebiten.IsFocused() {
-			ebiten.MinimizeWindow()
-			ebiten.MaximizeWindow()
-			ebiten.RestoreWindow()
-			WSLTricked = true
-		}
-
-		if inpututil.IsKeyJustReleased(ebiten.Key1) {
-			g.SceneManager.GoTo(&Dummy_Scene{GameState: g})
-		} else if inpututil.IsKeyJustReleased(ebiten.Key2) {
-			g.SceneManager.GoTo(&Splash_Scene{GameState: g})
-		}
-
-		nextSceneName := ""
-		if g.SceneManager.next != nil {
-			nextSceneName = g.SceneManager.next.GetName()
-		}
-
-		overlays.UpdateDebug(g.SceneManager.current.GetName(), nextSceneName)
+		FixWSLWindow()
+		UpdateDebugInput(g)
+		UpdateDebugOverlay(g)
 	}
 
 	if !ebiten.IsFocused() {
@@ -85,6 +62,6 @@ func (g *Game_State) Draw(screen *ebiten.Image) {
 	g.SceneManager.Draw(screen)
 
 	if conf.DEV {
-		overlays.DrawDebug(screen)
+		DrawDebugOverlay(screen)
 	}
 }

@@ -15,6 +15,10 @@ func (scene Dummy_Scene) GetName() string {
 	return "Dummy"
 }
 
+func (scene Dummy_Scene) GetStateName() string {
+	return ""
+}
+
 func (scene *Dummy_Scene) Update() error {
 	return nil
 }
