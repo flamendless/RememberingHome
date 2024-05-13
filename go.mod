@@ -16,6 +16,7 @@ require (
 	github.com/jezek/xgb v1.1.1 // indirect
 	github.com/jfreymuth/oggvorbis v1.0.5 // indirect
 	github.com/jfreymuth/vorbis v1.0.2 // indirect
+	github.com/solarlune/ebitick v0.0.0-20240504035334-82ae5db5b183 // indirect
 	github.com/solarlune/routine v0.0.0-20240401160545-0fca8842c80e // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/image v0.15.0 // indirect

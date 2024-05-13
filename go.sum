@@ -22,6 +22,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/quasilyte/ebitengine-resource v0.5.0 h1:sPncYunmgdBZVMRCZn2x2HUH3znL7m6IEczEjseTGbE=
 github.com/quasilyte/ebitengine-resource v0.5.0/go.mod h1:PEj32KsbbcgeSzAYQY5KspbImb/ucvJXoBgRMUrtBAQ=
+github.com/solarlune/ebitick v0.0.0-20240504035334-82ae5db5b183 h1:1OxBy/hg58A+CXOk18zw/ijtsIzBuErBF39Dc/Ni1sM=
+github.com/solarlune/ebitick v0.0.0-20240504035334-82ae5db5b183/go.mod h1:lRl36hg4G9kbASIhzApj//ayQHYY5vhRKheP/y9Mu4w=
 github.com/solarlune/routine v0.0.0-20240401160545-0fca8842c80e h1:cn/Jj38lI6ZgL6/A8814sscqNLNVpyisc43Ea2YzqLE=
 github.com/solarlune/routine v0.0.0-20240401160545-0fca8842c80e/go.mod h1:rH8QkyJvQgylDP/Hj0WmzChx43JW806utXCxs4tN6cg=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
