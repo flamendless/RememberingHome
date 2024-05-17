@@ -26,7 +26,6 @@ type Main_Menu_Scene struct {
 	TitleText        *Text
 	SubtitleText     *Text
 	SubtitleFader    *effects.Fader
-	ShowDesk         bool
 	ShowMenuTexts    bool
 	DeskAnim         *AnimationPlayer
 	Flickering       bool
@@ -72,11 +71,13 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	scaleDesk := float64(min(conf.GAME_W/deskFrameW, conf.GAME_H/deskFrameH))
 
 	scene.DeskAnim = NewAnimationPlayer(resDesk.Data)
+	scene.DeskAnim.AddStateAnimation("static", deskFrameW, 128, deskFrameW, deskFrameH, 1, false)
 	scene.DeskAnim.AddStateAnimation("row1", 0, 0, deskFrameW, deskFrameH, assets.SheetDeskFrameData.MaxCols, false)
 	scene.DeskAnim.AddStateAnimation("row2", 0, 64, deskFrameW, deskFrameH, assets.SheetDeskFrameData.MaxCols, false)
 	scene.DeskAnim.AddStateAnimation("row3", 0, 128, deskFrameW, deskFrameH, 1, false)
 	scene.DeskAnim.SetFPS(7)
-	scene.DeskAnim.SetStateReset("row1")
+	scene.DeskAnim.SetStateReset("static")
+	scene.DeskAnim.DIO.ColorScale.ScaleAlpha(0)
 
 	scene.DeskAnim.DIO.GeoM.Scale(scaleDesk, scaleDesk)
 	scene.DeskAnim.DIO.GeoM.Translate(
@@ -99,12 +100,6 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 		baseY += newTxt.DO.LineSpacing
 	}
 
-	waitFor := utils.IntRandRange(1, 3)
-	scene.CurrentStateName = "waiting flicker... " + strconv.Itoa(waitFor)
-	scene.TimerSys.After(time.Second*time.Duration(waitFor), func() {
-		scene.RandomFlicker()
-	})
-
 	sceneRoutine := routine.New()
 	sceneRoutine.Define(
 		"main menu scene",
@@ -112,6 +107,11 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 			scene.CurrentStateName = "title text animation"
 			if scene.GameState.SceneManager.IsFadeInFinished() {
 				scene.SubtitleFader.Stopped = false
+
+				scene.DeskAnim.SetStateReset("static")
+				utils.DIOReplaceAlpha(scene.DeskAnim.DIO, 1)
+				scene.DeskAnim.Update()
+
 				return routine.FlowNext
 			}
 			return routine.FlowIdle
@@ -122,8 +122,10 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 				scene.CurrentStateName = "showing menu..."
 				scene.SubtitleFader.Alpha = 0
 				scene.SubtitleFader.Stopped = true
-				scene.TitleText.SetAlpha(0)
-				scene.ShowDesk = true
+
+				utils.DOReplaceAlpha(scene.TitleText.DO, 0)
+				scene.DeskAnim.SetStateReset("row1")
+				scene.DeskAnim.Update()
 
 				return routine.FlowNext
 			}
@@ -143,6 +145,13 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
 			scene.CurrentStateName = "finished"
 			scene.ShowMenuTexts = true
+
+			waitFor := utils.IntRandRange(1, 3)
+			scene.CurrentStateName = "waiting flicker... " + strconv.Itoa(waitFor)
+			scene.TimerSys.After(time.Second*time.Duration(waitFor), func() {
+				scene.RandomFlicker()
+			})
+
 			return routine.FlowIdle
 		}),
 	)
@@ -158,7 +167,7 @@ func (scene *Main_Menu_Scene) RandomFlicker() {
 		scene.CurrentStateName = "flickering"
 		scene.DeskAnim.SetFPS(float64(utils.IntRandRange(4, 8)))
 	} else {
-		waitFor := utils.IntRandRange(1, 3)
+		waitFor := utils.IntRandRange(2, 4)
 		scene.CurrentStateName = "waiting flicker... " + strconv.Itoa(waitFor)
 		scene.TimerSys.After(time.Second*time.Duration(waitFor), func() {
 			scene.RandomFlicker()
@@ -171,23 +180,19 @@ func (scene *Main_Menu_Scene) Update() error {
 	scene.TimerSys.Update()
 	scene.Routine.Update()
 
-	if !scene.ShowDesk {
-		scene.SubtitleFader.Update()
-		scene.SubtitleText.DO.ColorScale = *scene.SubtitleFader.GetCS()
-	}
+	scene.SubtitleFader.Update()
+	scene.SubtitleText.DO.ColorScale = *scene.SubtitleFader.GetCS()
 
-	if scene.ShowDesk {
-		if scene.Flickering {
-			scene.DeskAnim.Update()
-			if scene.DeskAnim.IsInLastFrame() {
-				switch scene.DeskAnim.State() {
-				case "row1":
-					scene.DeskAnim.SetStateReset("row2")
-				case "row2":
-					scene.DeskAnim.SetStateReset("row3")
-				case "row3":
-					scene.RandomFlicker()
-				}
+	if scene.Flickering {
+		scene.DeskAnim.Update()
+		if scene.DeskAnim.IsInLastFrame() {
+			switch scene.DeskAnim.State() {
+			case "row1":
+				scene.DeskAnim.SetStateReset("row2")
+			case "row2":
+				scene.DeskAnim.SetStateReset("row3")
+			case "row3":
+				scene.RandomFlicker()
 			}
 		}
 	}
@@ -205,14 +210,9 @@ func (scene *Main_Menu_Scene) Update() error {
 }
 
 func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
-	if scene.ShowDesk {
-		screen.DrawImage(scene.DeskAnim.CurrentFrame, scene.DeskAnim.DIO)
-	}
-
-	if !scene.ShowDesk {
-		scene.TitleText.Draw(screen)
-		scene.SubtitleText.Draw(screen)
-	}
+	screen.DrawImage(scene.DeskAnim.CurrentFrame, scene.DeskAnim.DIO)
+	scene.TitleText.Draw(screen)
+	scene.SubtitleText.Draw(screen)
 
 	if scene.ShowMenuTexts {
 		for i, txt := range scene.Texts {

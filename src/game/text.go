@@ -50,10 +50,6 @@ func (txt *Text) SetColor(r, g, b, a float32) {
 	txt.DO.ColorScale.SetA(a)
 }
 
-func (txt *Text) SetAlpha(a float32) {
-	txt.DO.ColorScale.ScaleAlpha(a)
-}
-
 func (txt *Text) SetAlign(pa, sa text.Align) {
 	txt.DO.PrimaryAlign = pa
 	txt.DO.SecondaryAlign = sa
