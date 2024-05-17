@@ -3,7 +3,6 @@ package game
 import (
 	"nowhere-home/src/assets"
 	"nowhere-home/src/conf"
-	"nowhere-home/src/overlays"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -42,8 +41,8 @@ func NewSplashScene(gameState *Game_State) *Splash_Scene {
 	scaleFlamLogo := float64(min(conf.GAME_W*0.7/sizeFlamLogo.Max.X, conf.GAME_H*0.7/sizeFlamLogo.Max.Y))
 	scene.FlamLogoAnim.DIO.GeoM.Scale(scaleFlamLogo, scaleFlamLogo)
 	scene.FlamLogoAnim.DIO.GeoM.Translate(
-		float64(conf.GAME_W/2-sizeFlamLogo.Max.X*int(scaleFlamLogo)/2),
-		float64(conf.GAME_H/2-sizeFlamLogo.Max.Y*int(scaleFlamLogo)/2),
+		conf.GAME_W/2-float64(sizeFlamLogo.Max.X)*scaleFlamLogo/2,
+		conf.GAME_H/2-float64(sizeFlamLogo.Max.Y)*scaleFlamLogo/2,
 	)
 
 	resWits := gameState.Loader.LoadImage(assets.ImageSheetWits)
@@ -68,7 +67,7 @@ func NewSplashScene(gameState *Game_State) *Splash_Scene {
 		"splash scene",
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
 			scene.CurrentStateName = "flamendless logo fading in"
-			if overlays.IsFadeInFinished() {
+			if scene.GameState.SceneManager.IsFadeInFinished() {
 				return routine.FlowNext
 			}
 			return routine.FlowIdle
@@ -107,7 +106,7 @@ func (scene *Splash_Scene) Update() error {
 
 	if scene.ShowWits {
 		scene.WitsAnim.Update()
-		if scene.WitsAnim.CurrentFrameIndex == scene.WitsAnim.GetLastFrameCount() {
+		if scene.WitsAnim.IsInLastFrame() {
 			switch scene.WitsAnim.State() {
 			case "row1":
 				scene.WitsAnim.SetStateReset("row2")

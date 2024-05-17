@@ -17,8 +17,9 @@ func main() {
 	loader := assets.NewAssetsLoader()
 
 	logger.Log().Info("Launching game...")
-	sceneManager := &game.Scene_Manager{}
-	gameState := game.NewGame(loader, sceneManager)
+	sceneManager := game.NewSceneManager()
+	inputSystem := game.NewInputSystem()
+	gameState := game.NewGame(loader, sceneManager, inputSystem)
 
 	// sceneManager.GoTo(game.NewDummyScene(gameState))
 	// sceneManager.GoTo(game.NewSplashScene(gameState))

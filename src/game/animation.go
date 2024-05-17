@@ -112,6 +112,10 @@ func (ap *AnimationPlayer) GetLastFrameCount() int {
 	return len(ap.Animations[ap.CurrentState].Frames) - 1
 }
 
+func (ap *AnimationPlayer) IsInLastFrame() bool {
+	return ap.CurrentFrameIndex == ap.GetLastFrameCount()
+}
+
 func (ap *AnimationPlayer) Update() {
 	if !ap.Paused {
 		ap.Tick += ap.Animations[ap.CurrentState].FPS / 60.0

@@ -2,17 +2,18 @@ package game
 
 import (
 	"fmt"
+	"image/color"
 	"nowhere-home/src/conf"
-	"nowhere-home/src/overlays"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 var (
 	WSLTricked bool
-	Show       bool
+	ShowTexts       bool
+	ShowLines  bool
 	debugTexts [6]string
 )
 
@@ -26,7 +27,7 @@ const (
 )
 
 func init() {
-	Show = conf.DEV
+	ShowTexts = conf.DEV
 	if conf.DEV {
 		debugTexts[VERSION] = fmt.Sprintf("VERSION: %s\n", conf.GAME_VERSION)
 	}
@@ -42,24 +43,26 @@ func FixWSLWindow() {
 }
 
 func UpdateDebugInput(g *Game_State) {
-	if inpututil.IsKeyJustReleased(ebiten.KeyD) {
-		Show = !Show
-	} else if inpututil.IsKeyJustReleased(ebiten.Key1) {
+	if g.InputHandlerDev.ActionIsJustReleased(DevToggleTexts) {
+		ShowTexts = !ShowTexts
+	} else if g.InputHandlerDev.ActionIsJustReleased(DevToggleLines) {
+		ShowLines = !ShowLines
+	} else if g.InputHandlerDev.ActionIsJustReleased(DevGoToDummy) {
 		g.SceneManager.GoTo(NewDummyScene(g))
-	} else if inpututil.IsKeyJustReleased(ebiten.Key2) {
+	} else if g.InputHandlerDev.ActionIsJustReleased(DevGoToSplash) {
 		g.SceneManager.GoTo(NewSplashScene(g))
-	} else if inpututil.IsKeyJustReleased(ebiten.Key3) {
+	} else if g.InputHandlerDev.ActionIsJustReleased(DevGoToMainMenu) {
 		g.SceneManager.GoTo(NewMainMenuScene(g))
 	}
 }
 
 func UpdateDebugOverlay(g *Game_State) {
-	if !Show {
+	if !ShowTexts {
 		return
 	}
 	debugTexts[FPS] = fmt.Sprintf("FPS: %.2f", ebiten.ActualFPS())
 	debugTexts[TPS] = fmt.Sprintf("TPS: %.2f", ebiten.ActualTPS())
-	debugTexts[OVERLAY_FADE_ALPHA] = fmt.Sprintf("Overlay: %.2f", overlays.FadeAlpha)
+	debugTexts[OVERLAY_FADE_ALPHA] = fmt.Sprintf("Fade: Alpha = %.2f, Dir = %d", g.SceneManager.fader.Alpha, g.SceneManager.fader.Dir)
 
 	sceneName := g.SceneManager.current.GetName()
 	if g.SceneManager.next != nil {
@@ -76,10 +79,15 @@ func UpdateDebugOverlay(g *Game_State) {
 }
 
 func DrawDebugOverlay(screen *ebiten.Image) {
-	if !Show {
-		return
+	if ShowTexts {
+		for i := 0; i < len(debugTexts); i++ {
+			ebitenutil.DebugPrintAt(screen, debugTexts[i], 0, 16*i)
+		}
 	}
-	for i := 0; i < len(debugTexts); i++ {
-		ebitenutil.DebugPrintAt(screen, debugTexts[i], 0, 16*i)
+
+	if ShowLines {
+		clr := color.White
+		vector.StrokeLine(screen, conf.GAME_W/2, 0, conf.GAME_W/2, conf.GAME_H, 1, clr, false)
+		vector.StrokeLine(screen, 0, conf.GAME_H/2, conf.GAME_W, conf.GAME_H/2, 1, clr, false)
 	}
 }

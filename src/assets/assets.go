@@ -12,10 +12,6 @@ import (
 //go:embed data
 var gameAssets embed.FS
 
-type FrameData struct {
-	W, H, MaxCols int
-}
-
 const (
 	ImageNone resource.ImageID = iota
 	ImageWindowIcon
@@ -26,15 +22,12 @@ const (
 	ImageBGHallway
 )
 
-var (
-	SheetWitsFrameData FrameData
-	SheetDeskFrameData FrameData
+const (
+	FontNone resource.FontID = iota
+	FontJamboree18
+	FontJamboree26
+	FontJamboree46
 )
-
-func init() {
-	SheetWitsFrameData = FrameData{W: 256, H: 128, MaxCols: 3}
-	SheetDeskFrameData = FrameData{W: 256, H: 64, MaxCols: 3}
-}
 
 func NewAssetsLoader() *resource.Loader {
 	audioCtx := audio.NewContext(44100)
@@ -49,6 +42,7 @@ func NewAssetsLoader() *resource.Loader {
 	}
 
 	SetImageResources(loader)
+	SetFontResources(loader)
 
 	return loader
 }
@@ -66,5 +60,18 @@ func SetImageResources(loader *resource.Loader) {
 	}
 	for id, res := range imageResources {
 		loader.ImageRegistry.Set(id, res)
+		loader.LoadImage(id)
+	}
+}
+
+func SetFontResources(loader *resource.Loader) {
+	fontResources := map[resource.FontID]resource.FontInfo{
+		FontJamboree18: {Path: "fonts/Jamboree.ttf", Size: 18},
+		FontJamboree26: {Path: "fonts/Jamboree.ttf", Size: 26},
+		FontJamboree46: {Path: "fonts/Jamboree.ttf", Size: 46},
+	}
+	for id, res := range fontResources {
+		loader.FontRegistry.Set(id, res)
+		loader.LoadFont(id)
 	}
 }
