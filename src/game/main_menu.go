@@ -31,6 +31,7 @@ type Main_Menu_Scene struct {
 	Flickering       bool
 	Texts            []*Text
 	CurrentIdx       int
+	Layer            *Layer
 }
 
 func (scene Main_Menu_Scene) GetName() string {
@@ -46,6 +47,16 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 		GameState: gameState,
 		TimerSys:  ebitick.NewTimerSystem(),
 		Texts:     make([]*Text, 0, 16),
+		Layer:     NewLayerWithShader(
+			"test layer",
+			conf.GAME_W,
+			conf.GAME_H,
+			gameState.Loader.LoadShader(assets.ShaderColorize).Data,
+		),
+	}
+
+	scene.Layer.DRSO.Uniforms = map[string]any{
+		"Color": [4]float32{1, 1, 1, 1},
 	}
 
 	resFontJamboree46 := gameState.Loader.LoadFont(assets.FontJamboree46)
@@ -71,13 +82,13 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	scaleDesk := float64(min(conf.GAME_W/deskFrameW, conf.GAME_H/deskFrameH))
 
 	scene.DeskAnim = NewAnimationPlayer(resDesk.Data)
-	scene.DeskAnim.AddStateAnimation("static", deskFrameW, 128, deskFrameW, deskFrameH, 1, false)
 	scene.DeskAnim.AddStateAnimation("row1", 0, 0, deskFrameW, deskFrameH, assets.SheetDeskFrameData.MaxCols, false)
 	scene.DeskAnim.AddStateAnimation("row2", 0, 64, deskFrameW, deskFrameH, assets.SheetDeskFrameData.MaxCols, false)
 	scene.DeskAnim.AddStateAnimation("row3", 0, 128, deskFrameW, deskFrameH, 1, false)
+	scene.DeskAnim.AddStateAnimation("static", deskFrameW, 128, deskFrameW, deskFrameH, 1, false)
 	scene.DeskAnim.SetFPS(7)
-	scene.DeskAnim.SetStateReset("static")
-	scene.DeskAnim.DIO.ColorScale.ScaleAlpha(0)
+	utils.DIOReplaceAlpha(scene.DeskAnim.DIO, 1)
+	scene.DeskAnim.Update()
 
 	scene.DeskAnim.DIO.GeoM.Scale(scaleDesk, scaleDesk)
 	scene.DeskAnim.DIO.GeoM.Translate(
@@ -107,11 +118,6 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 			scene.CurrentStateName = "title text animation"
 			if scene.GameState.SceneManager.IsFadeInFinished() {
 				scene.SubtitleFader.Stopped = false
-
-				scene.DeskAnim.SetStateReset("static")
-				utils.DIOReplaceAlpha(scene.DeskAnim.DIO, 1)
-				scene.DeskAnim.Update()
-
 				return routine.FlowNext
 			}
 			return routine.FlowIdle
@@ -210,9 +216,12 @@ func (scene *Main_Menu_Scene) Update() error {
 }
 
 func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
-	screen.DrawImage(scene.DeskAnim.CurrentFrame, scene.DeskAnim.DIO)
-	scene.TitleText.Draw(screen)
-	scene.SubtitleText.Draw(screen)
+	canvas := scene.Layer.Canvas
+	canvas.Clear()
+
+	canvas.DrawImage(scene.DeskAnim.CurrentFrame, scene.DeskAnim.DIO)
+	scene.TitleText.Draw(canvas)
+	scene.SubtitleText.Draw(canvas)
 
 	if scene.ShowMenuTexts {
 		for i, txt := range scene.Texts {
@@ -221,7 +230,9 @@ func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
 			} else {
 				txt.SetColor(1, 1, 1, 1)
 			}
-			txt.Draw(screen)
+			txt.Draw(canvas)
 		}
 	}
+
+	scene.Layer.ApplyShader(screen)
 }
