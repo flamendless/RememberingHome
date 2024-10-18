@@ -20,11 +20,11 @@ type Splash_Scene struct {
 	CurrentStateName string
 }
 
-func (scene Splash_Scene) GetName() string {
+func (scene *Splash_Scene) GetName() string {
 	return "Splash"
 }
 
-func (scene Splash_Scene) GetStateName() string {
+func (scene *Splash_Scene) GetStateName() string {
 	return scene.CurrentStateName
 }
 
@@ -115,7 +115,7 @@ func (scene *Splash_Scene) Update() error {
 			case "row3":
 				scene.WitsAnim.SetStateReset("row4")
 			case "row4":
-				scene.WitsAnim.PauseAtFrame(assets.SheetWitsFrameData.MaxCols-1)
+				scene.WitsAnim.PauseAtFrame(assets.SheetWitsFrameData.MaxCols - 1)
 				scene.FinishedWits = true
 			}
 		}
@@ -129,3 +129,5 @@ func (scene *Splash_Scene) Draw(screen *ebiten.Image) {
 		screen.DrawImage(scene.WitsAnim.CurrentFrame, scene.WitsAnim.DIO)
 	}
 }
+
+var _ Scene = (*Splash_Scene)(nil)

@@ -12,7 +12,7 @@ import (
 
 var (
 	WSLTricked bool
-	ShowTexts       bool
+	ShowTexts  bool
 	ShowLines  bool
 	debugTexts [6]string
 )

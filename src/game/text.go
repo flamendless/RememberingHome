@@ -29,7 +29,7 @@ func NewText(face *font.Face, str string, static bool) *Text {
 	}
 }
 
-func (txt Text) GetAlpha() float32 {
+func (txt *Text) GetAlpha() float32 {
 	return txt.DO.ColorScale.A()
 }
 

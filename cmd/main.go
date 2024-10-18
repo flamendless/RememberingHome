@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
 	"nowhere-home/src/assets"
+	"nowhere-home/src/common"
 	"nowhere-home/src/conf"
 	"nowhere-home/src/game"
 	"nowhere-home/src/logger"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -26,6 +29,11 @@ func main() {
 	sceneManager.GoTo(game.NewMainMenuScene(gameState))
 
 	if err := ebiten.RunGame(gameState); err != nil {
+		if errors.Is(err, common.ERR_QUIT) {
+			logger.Log().Info("Successfully exited the game")
+			os.Exit(0)
+			return
+		}
 		logger.Log().Fatal(err.Error())
 	}
 }

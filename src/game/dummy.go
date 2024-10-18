@@ -8,11 +8,11 @@ type Dummy_Scene struct {
 	GameState *Game_State
 }
 
-func (scene Dummy_Scene) GetName() string {
+func (scene *Dummy_Scene) GetName() string {
 	return "Dummy"
 }
 
-func (scene Dummy_Scene) GetStateName() string {
+func (scene *Dummy_Scene) GetStateName() string {
 	return ""
 }
 
@@ -29,3 +29,5 @@ func (scene *Dummy_Scene) Update() error {
 
 func (scene *Dummy_Scene) Draw(screen *ebiten.Image) {
 }
+
+var _ Scene = (*Dummy_Scene)(nil)

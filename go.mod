@@ -4,6 +4,7 @@ go 1.22.2
 
 require (
 	github.com/hajimehoshi/ebiten/v2 v2.7.2
+	github.com/quasilyte/ebitengine-input v0.9.1
 	github.com/quasilyte/ebitengine-resource v0.5.0
 	github.com/solarlune/ebitick v0.0.0-20240504035334-82ae5db5b183
 	github.com/solarlune/routine v0.0.0-20240401160545-0fca8842c80e
@@ -20,7 +21,6 @@ require (
 	github.com/jezek/xgb v1.1.1 // indirect
 	github.com/jfreymuth/oggvorbis v1.0.5 // indirect
 	github.com/jfreymuth/vorbis v1.0.2 // indirect
-	github.com/quasilyte/ebitengine-input v0.9.1 // indirect
 	github.com/quasilyte/gmath v0.0.0-20221217210116-fba37a2e15c7 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect

@@ -64,7 +64,12 @@ func (ap *AnimationPlayer) AddStateAnimation(
 
 	ap.CurrentState = stateName
 	ap.Animations[stateName] = anim
-	ap.CurrentFrame = ap.Animations[ap.CurrentState].Frames[ap.CurrentFrameIndex]
+
+	dataAnim, ok := ap.Animations[ap.CurrentState]
+	if !ok {
+		panic("nil element in array")
+	}
+	ap.CurrentFrame = dataAnim.Frames[ap.CurrentFrameIndex]
 
 	return anim
 }
@@ -84,7 +89,11 @@ func (ap *AnimationPlayer) State() string {
 }
 
 func (ap *AnimationPlayer) CurrentStateFPS() float64 {
-	return ap.Animations[ap.State()].FPS
+	dataAnim, ok := ap.Animations[ap.State()]
+	if !ok {
+		panic("nil element in array")
+	}
+	return dataAnim.FPS
 }
 
 func (ap *AnimationPlayer) SetStateReset(state string) {
@@ -102,14 +111,23 @@ func (ap *AnimationPlayer) SetState(state string) {
 }
 
 func (ap *AnimationPlayer) PauseAtFrame(frameIndex int) {
-	if frameIndex < len(ap.Animations[ap.State()].Frames) && frameIndex >= 0 {
+	dataAnim, ok := ap.Animations[ap.State()]
+	if !ok {
+		panic("nil element in array")
+	}
+
+	if frameIndex < len(dataAnim.Frames) && frameIndex >= 0 {
 		ap.Paused = true
 		ap.CurrentFrameIndex = frameIndex
 	}
 }
 
 func (ap *AnimationPlayer) GetLastFrameCount() int {
-	return len(ap.Animations[ap.CurrentState].Frames) - 1
+	dataAnim, ok := ap.Animations[ap.CurrentState]
+	if !ok {
+		panic("nil element in array")
+	}
+	return len(dataAnim.Frames) - 1
 }
 
 func (ap *AnimationPlayer) IsInLastFrame() bool {
@@ -117,14 +135,19 @@ func (ap *AnimationPlayer) IsInLastFrame() bool {
 }
 
 func (ap *AnimationPlayer) Update() {
+	dataAnim, ok := ap.Animations[ap.CurrentState]
+	if !ok {
+		panic("nil element in array")
+	}
+
 	if !ap.Paused {
-		ap.Tick += ap.Animations[ap.CurrentState].FPS / 60.0
+		ap.Tick += dataAnim.FPS / 60.0
 		ap.CurrentFrameIndex = int(math.Floor(ap.Tick))
-		if ap.CurrentFrameIndex >= len(ap.Animations[ap.CurrentState].Frames) {
+		if ap.CurrentFrameIndex >= len(dataAnim.Frames) {
 			ap.Tick = 0
 			ap.CurrentFrameIndex = 0
 		}
 	}
 
-	ap.CurrentFrame = ap.Animations[ap.CurrentState].Frames[ap.CurrentFrameIndex]
+	ap.CurrentFrame = dataAnim.Frames[ap.CurrentFrameIndex]
 }

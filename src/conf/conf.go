@@ -25,7 +25,7 @@ func init() {
 	flag.BoolVar(&DEV, "dev", false, "developer mode")
 	flag.Parse()
 
-	if DEV == true {
+	if DEV {
 		FULLSCREEN = false
 	}
 }

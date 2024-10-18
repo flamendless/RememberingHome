@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"nowhere-home/src/assets"
+	"nowhere-home/src/common"
 	"nowhere-home/src/conf"
 	"nowhere-home/src/effects"
 	"nowhere-home/src/utils"
@@ -27,6 +28,7 @@ type Main_Menu_Scene struct {
 	SubtitleText     *Text
 	SubtitleFader    *effects.Fader
 	ShowMenuTexts    bool
+	CanInteract      bool
 	DeskAnim         *AnimationPlayer
 	Flickering       bool
 	Texts            []*Text
@@ -34,11 +36,11 @@ type Main_Menu_Scene struct {
 	Layer            *Layer
 }
 
-func (scene Main_Menu_Scene) GetName() string {
+func (scene *Main_Menu_Scene) GetName() string {
 	return "Main Menu"
 }
 
-func (scene Main_Menu_Scene) GetStateName() string {
+func (scene *Main_Menu_Scene) GetStateName() string {
 	return scene.CurrentStateName
 }
 
@@ -47,7 +49,7 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 		GameState: gameState,
 		TimerSys:  ebitick.NewTimerSystem(),
 		Texts:     make([]*Text, 0, 16),
-		Layer:     NewLayerWithShader(
+		Layer: NewLayerWithShader(
 			"test layer",
 			conf.GAME_W,
 			conf.GAME_H,
@@ -67,8 +69,11 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	scene.TitleText = titleTxt
 
 	resFontJamboree18 := gameState.Loader.LoadFont(assets.FontJamboree18)
-	enterKey := scene.GameState.InputHandler.ActionKeyNames(ActionEnter, input.KeyboardDevice)[0]
-	subtitleTxt := NewText(&resFontJamboree18.Face, fmt.Sprintf("press <%s> to continue", enterKey), true)
+	keys := scene.GameState.InputHandler.ActionKeyNames(ActionEnter, input.KeyboardDevice)
+	if len(keys) == 0 {
+		panic(fmt.Sprintf("No valid '%d' in action key names", ActionEnter))
+	}
+	subtitleTxt := NewText(&resFontJamboree18.Face, fmt.Sprintf("press <%s> to continue", keys[0]), true)
 	subtitleTxt.SetPos(conf.GAME_W/2, conf.GAME_H/2+titleTxt.DO.LineSpacing*2)
 	subtitleTxt.SetAlign(text.AlignCenter, text.AlignCenter)
 	subtitleTxt.SetColor(1, 1, 1, 1)
@@ -137,17 +142,6 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 			}
 			return routine.FlowIdle
 		}),
-		// actions.NewFunction(func(block *routine.Block) routine.Flow {
-		// 	scene.CurrentStateName = "moving title text"
-		// 	baseY := conf.GAME_H/2-float64(deskFrameH)*scaleDesk/2
-		// 	const speed = 8
-		// 	if scene.TitleText.Y > baseY - scene.TitleText.DO.LineSpacing/2 {
-		// 		scene.TitleText.SetPos(scene.TitleText.X, scene.TitleText.Y - speed)
-		// 	} else {
-		// 		return routine.FlowNext
-		// 	}
-		// 	return routine.FlowIdle
-		// }),
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
 			scene.CurrentStateName = "finished"
 			scene.ShowMenuTexts = true
@@ -156,6 +150,7 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 			scene.CurrentStateName = "waiting flicker... " + strconv.Itoa(waitFor)
 			scene.TimerSys.After(time.Second*time.Duration(waitFor), func() {
 				scene.RandomFlicker()
+				scene.CanInteract = true
 			})
 
 			return routine.FlowIdle
@@ -203,11 +198,21 @@ func (scene *Main_Menu_Scene) Update() error {
 		}
 	}
 
-	if scene.ShowMenuTexts {
-		if scene.GameState.InputHandler.ActionIsJustReleased(ActionMoveUp) {
+	if scene.ShowMenuTexts && scene.CanInteract {
+		inputHandler := scene.GameState.InputHandler
+		if inputHandler.ActionIsJustReleased(ActionMoveUp) {
 			scene.CurrentIdx--
-		} else if scene.GameState.InputHandler.ActionIsJustReleased(ActionMoveDown) {
+		} else if inputHandler.ActionIsJustReleased(ActionMoveDown) {
 			scene.CurrentIdx++
+		} else if inputHandler.ActionIsJustReleased(ActionEnter) {
+			switch scene.CurrentIdx {
+			case 0: //TODO: (Brandon) - go to game
+			case 1: //TODO: (Brandon) - go to game
+			case 2:
+				return common.ERR_QUIT
+			default:
+				panic(scene.CurrentIdx)
+			}
 		}
 		scene.CurrentIdx = utils.ClampInt(scene.CurrentIdx, 0, len(scene.Texts)-1)
 	}
@@ -236,3 +241,5 @@ func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
 
 	scene.Layer.ApplyShader(screen)
 }
+
+var _ Scene = (*Main_Menu_Scene)(nil)

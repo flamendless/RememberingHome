@@ -5,5 +5,5 @@ func ClampInt(value, minValue, maxValue int) int {
 }
 
 func WrapAroundInt(value, low, high int) int {
-	return (value - low) % (high - low) + low
+	return (value-low)%(high-low) + low
 }

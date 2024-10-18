@@ -64,9 +64,7 @@ func (g *Game_State) Update() error {
 		return nil
 	}
 
-	g.SceneManager.Update()
-
-	return nil
+	return g.SceneManager.Update()
 }
 
 func (g *Game_State) Draw(screen *ebiten.Image) {
