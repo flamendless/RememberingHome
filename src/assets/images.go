@@ -9,17 +9,21 @@ import (
 
 const (
 	ImageNone resource.ImageID = iota
+	ImageDummy
 	ImageWindowIcon
 	ImageFlamLogo
 	ImageSheetWits
 	ImageSheetDesk
 	ImageBGDoor
 	ImageBGHallway
+	TextureNoise
+	TextureFog
 )
 
 func SetImageResources(loader *resource.Loader) {
 	logger.Log().Info("Setting image resources...")
 	imageResources := map[resource.ImageID]resource.ImageInfo{
+		ImageDummy:      {Path: "dummy.png"},
 		ImageWindowIcon: {Path: "icon.png"},
 
 		ImageFlamLogo:  {Path: "splash/logo_flamendless.png"},
@@ -28,6 +32,8 @@ func SetImageResources(loader *resource.Loader) {
 		ImageSheetDesk: {Path: "main_menu/sheet_desk_colored.png"},
 		ImageBGDoor:    {Path: "main_menu/bg_door.png"},
 		ImageBGHallway: {Path: "main_menu/bg_hallway.png"},
+		TextureNoise:    {Path: "textures/noise.png"},
+		TextureFog:      {Path: "textures/fog.png"},
 	}
 	for id, res := range imageResources {
 		logger.Log().Info("Loading image", zap.String("path", res.Path))

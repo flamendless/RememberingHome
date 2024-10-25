@@ -1,0 +1,139 @@
+//go:build ignore
+
+//kage:unit pixels
+
+//Credits: https://gitlab.com/sedyh/ferromagnetic/-/blob/main/system/water.go?ref_type=heads#L169
+
+package main
+
+var ScreenSize vec2
+var WaveShift float
+var WaveOffset vec2
+var WaveEmersion float
+var Scale float
+
+func permute(x vec3) vec3 {
+	return mod((34.0*x+1.0)*x, 289.0)
+}
+
+func dist(x vec3, y vec3, manhattanDistance bool) vec3 {
+	if manhattanDistance {
+		return abs(x) + abs(y)
+	} else {
+		return (x*x + y*y)
+	}
+}
+
+func worley(P vec2, jitter float, manhattanDistance bool) vec2 {
+	K := 0.142857142857
+	Ko := 0.428571428571
+	Pi := mod(floor(P), 289.0)
+	Pf := fract(P)
+	oi := vec3(-1.0, 0.0, 1.0)
+	of := vec3(-0.5, 0.5, 1.5)
+	px := permute(Pi.x + oi)
+	p := permute(px.x + Pi.y + oi)
+	ox := fract(p*K) - Ko
+	oy := mod(floor(p*K), 7.0)*K - Ko
+	dx := Pf.x + 0.5 + jitter*ox
+	dy := Pf.y - of + jitter*oy
+	d1 := dist(dx, dy, manhattanDistance)
+	p = permute(px.y + Pi.y + oi)
+	ox = fract(p*K) - Ko
+	oy = mod(floor(p*K), 7.0)*K - Ko
+	dx = Pf.x - 0.5 + jitter*ox
+	dy = Pf.y - of + jitter*oy
+	d2 := dist(dx, dy, manhattanDistance)
+	p = permute(px.z + Pi.y + oi)
+	ox = fract(p*K) - Ko
+	oy = mod(floor(p*K), 7.0)*K - Ko
+	dx = Pf.x - 1.5 + jitter*ox
+	dy = Pf.y - of + jitter*oy
+	d3 := dist(dx, dy, manhattanDistance)
+	d1a := min(d1, d2)
+	d2 = max(d1, d2)
+	d2 = min(d2, d3)
+	d1 = min(d1a, d2)
+	d2 = max(d1a, d2)
+	if d1.x >= d1.y {
+		d1.xy = d1.yx
+	}
+	if d1.x >= d1.z {
+		d1.xz = d1.zx
+	}
+	d1.yz = min(d1.yz, d2.yz)
+	d1.y = min(d1.y, d1.z)
+	d1.y = min(d1.y, d2.x)
+	return sqrt(d1.xy)
+}
+
+func random(c vec3) vec3 {
+	j := 4096.0 * sin(dot(c, vec3(17.0, 59.4, 15.0)))
+
+	var r vec3
+	r.z = fract(512.0 * j)
+	j *= .125
+	r.x = fract(512.0 * j)
+	j *= .125
+	r.y = fract(512.0 * j)
+
+	return r - 0.5
+}
+
+func simplex(p vec3) float {
+	F3 := 0.3333333
+	G3 := 0.1666667
+	s := floor(p + dot(p, vec3(F3)))
+	x := p - s + dot(s, vec3(G3))
+
+	e := step(vec3(0.0), x-x.yzx)
+	i1 := e * (1.0 - e.zxy)
+	i2 := 1.0 - e.zxy*(1.0-e)
+
+	x1 := x - i1 + G3
+	x2 := x - i2 + 2.0*G3
+	x3 := x - 1.0 + 3.0*G3
+
+	var w, d vec4
+
+	w.x = dot(x, x)
+	w.y = dot(x1, x1)
+	w.z = dot(x2, x2)
+	w.w = dot(x3, x3)
+
+	w = max(0.6-w, 0.0)
+
+	d.x = dot(random(s), x)
+	d.y = dot(random(s+i1), x1)
+	d.z = dot(random(s+i2), x2)
+	d.w = dot(random(s+1.0), x3)
+
+	w *= w
+	w *= w
+	d *= w
+
+	return dot(d, vec4(52.0))
+}
+
+func Fragment(dst vec4, src vec2, col vec4) vec4 {
+	p := src / ScreenSize
+	p.y *= ScreenSize.y / ScreenSize.x
+
+	sc := simplex(vec3(p.xy*15, WaveEmersion))
+	f := worley((p.xy+WaveOffset.xy+vec2(sc*0.01))*10, WaveShift, false)
+	wc := f.y - f.x
+	ff := worley((p.xy+WaveOffset.xy+vec2(sc*0.01))*15+5, WaveShift, false)
+	wc2 := ff.y - ff.x
+
+	wave := vec4(.07, .31, .5, 1)
+	foam := vec4(1, 1, 1, 1)
+	layer := 0.6
+	start, end := 0.08*Scale, 0.05*Scale
+
+	d := mix(wave, foam, smoothstep(start, end, wc))
+	d = mix(d, wave, layer)
+	d = mix(d, foam, smoothstep(start, end, wc2))
+	d = mix(d, wave, layer)
+
+	return d
+}

@@ -19,6 +19,7 @@ type AnimationPlayer struct {
 	SpriteSheet       *ebiten.Image
 	CurrentFrame      *ebiten.Image
 	DIO               *ebiten.DrawImageOptions
+	DRSO              *ebiten.DrawRectShaderOptions
 	Animations        map[string]*Animation
 	Paused            bool
 	CurrentFrameIndex int
@@ -32,9 +33,10 @@ func NewAnimationPlayer(spriteSheet *ebiten.Image) *AnimationPlayer {
 		Paused:            false,
 		Animations:        make(map[string]*Animation),
 		CurrentFrameIndex: 0,
-		DIO:               &ebiten.DrawImageOptions{},
+		DIO:               &ebiten.DrawImageOptions{
+			Filter: ebiten.FilterNearest,
+		},
 	}
-
 }
 
 func (ap *AnimationPlayer) AddStateAnimation(

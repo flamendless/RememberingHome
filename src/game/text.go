@@ -12,6 +12,7 @@ type Text struct {
 	Txt    string
 	Static bool
 	X, Y   float64
+	SpaceY float64
 	Show   bool
 }
 
@@ -41,13 +42,6 @@ func (txt *Text) SetPos(x, y float64) {
 	txt.X = x
 	txt.Y = y
 	txt.DO.GeoM.Translate(x, y)
-}
-
-func (txt *Text) SetColor(r, g, b, a float32) {
-	txt.DO.ColorScale.SetR(r)
-	txt.DO.ColorScale.SetG(g)
-	txt.DO.ColorScale.SetB(b)
-	txt.DO.ColorScale.SetA(a)
 }
 
 func (txt *Text) SetAlign(pa, sa text.Align) {

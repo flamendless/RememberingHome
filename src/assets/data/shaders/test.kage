@@ -4,8 +4,12 @@
 
 package main
 
-var Color vec4
+var Test int
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
-	return imageSrc0At(srcPos) * Color
+	for i := 0; i < Test; i += 1 {
+		color.r += 1
+	}
+	return imageSrc0At(srcPos) * color
 }
+

@@ -42,6 +42,6 @@ if [ "$#" -eq 0 ]; then
 	echo "First use: chmod +x run.sh"
 	echo "Usage: ./run.sh run"
 else
-	echo "Running $1"
+	echo "Running $@"
 	"$1" "$@"
 fi
