@@ -12,7 +12,7 @@ const (
 	ShaderTest
 	ShaderColorize
 	ShaderWater
-	ShaderFog
+	ShaderMenuText
 )
 
 func SetShaderResources(loader *resource.Loader) {
@@ -21,7 +21,7 @@ func SetShaderResources(loader *resource.Loader) {
 		// ShaderTest:     {Path: "shaders/test.kage"},
 		ShaderColorize: {Path: "shaders/colorize.kage"},
 		ShaderWater:    {Path: "shaders/water.kage"},
-		ShaderFog:      {Path: "shaders/fog.kage"},
+		ShaderMenuText: {Path: "shaders/menutext.kage"},
 	}
 	for id, res := range shaderResources {
 		logger.Log().Info("Loading shader", zap.String("path", res.Path))
@@ -32,7 +32,7 @@ func SetShaderResources(loader *resource.Loader) {
 
 type ShaderUniforms interface{}
 
-type WaterShader struct {
+type WaterShaderUniforms struct {
 	ScreenSize   [2]float32
 	WaveShift    float32
 	WaveOffset   [2]float32
@@ -42,12 +42,14 @@ type WaterShader struct {
 	SlowPeriod   float64
 }
 
-type FogShader struct {
+type MenuTextShaderUniforms struct {
 	Time              float64
-	StartingAmplitude float32
+	Pos               [2]float32
+	Size              [2]float32
+	StartingAmplitude float32 //0.0 - 0.5
 	StartingFreq      float32
-	Shift             float32
-	WhiteCutoff       float32
+	Shift             float32 //-1.0 - 1.0
+	WhiteCutoff       float32 //0.0 - 1.0
 	Velocity          [2]float32
-	FogColor          [4]float32
+	Color             [4]float32
 }

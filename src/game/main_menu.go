@@ -55,7 +55,6 @@ func (scene *Main_Menu_Scene) GetStateName() string {
 }
 
 func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
-	texFogFD := assets.TexFogFrameData
 	scene := Main_Menu_Scene{
 		GameState: gameState,
 		TimerSys:  ebitick.NewTimerSystem(),
@@ -66,17 +65,18 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 			conf.GAME_H,
 			gameState.Loader.LoadShader(assets.ShaderColorize).Data,
 		),
-		LayerText: NewLayerWithShader(
+		LayerText: NewLayerWithTriangleShader(
 			"menu texts layer",
-			texFogFD.W,
-			texFogFD.H,
-			gameState.Loader.LoadShader(assets.ShaderFog).Data,
+			conf.GAME_W,
+			conf.GAME_H,
+			gameState.Loader.LoadShader(assets.ShaderMenuText).Data,
 		),
 	}
 
 	scene.LayerColorize.DRSO.Uniforms = map[string]any{
 		"Color": [4]float32{1, 1, 1, 1},
 	}
+	scene.LayerColorize.Disabled = true
 
 	resFontJamboree46 := gameState.Loader.LoadFont(assets.FontJamboree46)
 	titleTxt := NewText(&resFontJamboree46.Face, "Nowhere Home", true)
@@ -145,25 +145,41 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 		baseY += newTxt.DO.LineSpacing
 	}
 
-	utils.DRSOSetColor(scene.LayerText.DRSO, 1, 0, 0, 1)
-	scene.LayerText.DRSO.Images[1] = gameState.Loader.LoadImage(assets.TextureFog).Data
-	scene.LayerText.Uniforms = &assets.FogShader{
-		Time:              0,
-		StartingAmplitude: 0.5, //0.0 - 0.5
-		StartingFreq:      1.0,
-		Shift:             0.0,   //-1.0 - 1.0
-		WhiteCutoff:       0.999, //0.0 - 1.0
-		Velocity:          [2]float32{0.0, 32.0},
-		// FogColor:          [4]float32{0.0, 1.0, 1.0, 1.0},
-		FogColor:          [4]float32{0.0, 0.0, 0.0, 1.0},
-	}
 	textH := scene.Texts[0].DO.LineSpacing
-	scaleTextBG := float64(textH / float64(texFogFD.H))
-	scene.LayerText.ScaleX = 4
-	scene.LayerText.ScaleY = scaleTextBG
-	scene.LayerText.ScaleY = 4
-	scene.LayerText.X = conf.GAME_W/2 - float64(texFogFD.W*int(scene.LayerText.ScaleX))/2
-	scene.LayerText.Y = scene.Texts[0].Y - spaceY/2 - float64(texFogFD.H*int(scene.LayerText.ScaleY))/2
+	scene.LayerText.DTSO.Images[1] = gameState.Loader.LoadImage(assets.TexturePaper).Data
+	scene.LayerText.Uniforms = &assets.MenuTextShaderUniforms{
+		Time:              0,
+		Pos:               [2]float32{0.0, 0.0},
+		Size:              [2]float32{conf.GAME_W * 0.1, float32(textH)},
+		StartingAmplitude: 0.5,
+		StartingFreq:      1.0,
+		Shift:             0.0,
+		WhiteCutoff:       0.999,
+		Velocity:          [2]float32{-8.0, -32.0},
+		Color:             [4]float32{0.0, 1.0, 1.0, 1.0},
+	}
+
+	vx, ix := utils.AppendRectVerticesIndices(
+		nil,
+		nil,
+		0,
+		&utils.RectOpts{
+			DstX:      0,
+			DstY:      0,
+			SrcX:      0,
+			SrcY:      0,
+			DstWidth:  conf.GAME_W,
+			DstHeight: conf.GAME_H,
+			SrcWidth:  conf.GAME_W,
+			SrcHeight: conf.GAME_H,
+			R:         1,
+			G:         1,
+			B:         1,
+			A:         1,
+		},
+	)
+	scene.LayerText.Vertices = vx
+	scene.LayerText.Indices = ix
 
 	sceneRoutine := routine.New()
 	sceneRoutine.Define(
@@ -251,7 +267,7 @@ func (scene *Main_Menu_Scene) Update() error {
 		}
 	}
 
-	uniform, ok := scene.LayerText.Uniforms.(*assets.FogShader)
+	uniform, ok := scene.LayerText.Uniforms.(*assets.MenuTextShaderUniforms)
 	if !ok {
 		panic("incorrect casting")
 	}
@@ -259,13 +275,19 @@ func (scene *Main_Menu_Scene) Update() error {
 	uniform.Time += 0.01
 	// v := (math.Sin(uniform.Time) + 1) / 2
 	// uniform.StartingAmplitude = float32(v)
+	curText := scene.Texts[scene.CurrentIdx]
+	uniform.Pos[0] = float32(curText.X)
+	uniform.Pos[1] = float32(curText.Y)
+	uniform.Size[0] = conf.GAME_W*0.1 + float32(len(curText.Txt))*8
 
 	if scene.ShowMenuTexts && scene.CanInteract {
 		inputHandler := scene.GameState.InputHandler
 		if inputHandler.ActionIsJustReleased(ActionMoveUp) {
 			scene.CurrentIdx--
+			uniform.Time = 0
 		} else if inputHandler.ActionIsJustReleased(ActionMoveDown) {
 			scene.CurrentIdx++
+			uniform.Time = 0
 		} else if inputHandler.ActionIsJustReleased(ActionEnter) {
 			switch scene.CurrentIdx {
 			case MENU_START: //TODO: (Brandon) - go to game
@@ -280,7 +302,6 @@ func (scene *Main_Menu_Scene) Update() error {
 		scene.CurrentIdx = utils.ClampInt(scene.CurrentIdx, 0, len(scene.Texts)-1)
 
 		texNoiseFD := assets.TexFogFrameData
-		curText := scene.Texts[scene.CurrentIdx]
 		scene.LayerText.Y = curText.Y - (curText.SpaceY / 2) - float64((texNoiseFD.H*int(scene.LayerText.ScaleY))/2)
 	}
 
@@ -304,49 +325,32 @@ func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
 	if scene.ShowMenuTexts {
 		canvas2 := scene.LayerText.Canvas
 		canvas2.Clear()
-		uniform, ok := scene.LayerText.Uniforms.(*assets.FogShader)
+		uniform, ok := scene.LayerText.Uniforms.(*assets.MenuTextShaderUniforms)
 		if !ok {
 			panic("incorrect casting")
 		}
-		scene.LayerText.DRSO.Uniforms = map[string]any{
+
+		scene.LayerText.DTSO.Uniforms = map[string]any{
 			"Time":              uniform.Time,
+			"Pos":               uniform.Pos,
+			"Size":              uniform.Size,
 			"StartingAmplitude": uniform.StartingAmplitude,
 			"StartingFreq":      uniform.StartingFreq,
 			"Shift":             uniform.Shift,
 			"WhiteCutoff":       uniform.WhiteCutoff,
 			"Velocity":          uniform.Velocity,
-			"FogColor":          uniform.FogColor,
+			"Color":             uniform.Color,
 		}
-		scene.LayerText.ApplyShader(canvas)
 
-		for i, txt := range scene.Texts {
-			if i == scene.CurrentIdx {
-				utils.SetColor(txt.DO, 1, 0, 0, 1)
-			} else {
-				utils.SetColor(txt.DO, 1, 1, 1, 1)
-			}
-			txt.Draw(canvas)
+		for _, txt := range scene.Texts {
+			utils.SetColor(txt.DO, 1, 1, 1, 1)
+			txt.Draw(canvas2)
 		}
+
+		scene.LayerText.RenderWithShader(canvas)
 	}
 
-	canvas2 := scene.LayerText.Canvas
-	canvas2.Clear()
-	uniform, ok := scene.LayerText.Uniforms.(*assets.FogShader)
-	if !ok {
-		panic("incorrect casting")
-	}
-	scene.LayerText.DRSO.Uniforms = map[string]any{
-		"Time":              uniform.Time,
-		"StartingAmplitude": uniform.StartingAmplitude,
-		"StartingFreq":      uniform.StartingFreq,
-		"Shift":             uniform.Shift,
-		"WhiteCutoff":       uniform.WhiteCutoff,
-		"Velocity":          uniform.Velocity,
-		"FogColor":          uniform.FogColor,
-	}
-	scene.LayerText.ApplyShader(canvas)
-
-	scene.LayerColorize.ApplyShader(screen)
+	scene.LayerColorize.RenderWithShader(screen)
 }
 
 var _ Scene = (*Main_Menu_Scene)(nil)

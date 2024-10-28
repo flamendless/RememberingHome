@@ -18,6 +18,7 @@ const (
 	ImageBGHallway
 	TextureNoise
 	TextureFog
+	TexturePaper
 )
 
 func SetImageResources(loader *resource.Loader) {
@@ -32,8 +33,10 @@ func SetImageResources(loader *resource.Loader) {
 		ImageSheetDesk: {Path: "main_menu/sheet_desk_colored.png"},
 		ImageBGDoor:    {Path: "main_menu/bg_door.png"},
 		ImageBGHallway: {Path: "main_menu/bg_hallway.png"},
-		TextureNoise:    {Path: "textures/noise.png"},
-		TextureFog:      {Path: "textures/fog.png"},
+
+		TextureNoise: {Path: "textures/noise.png"},
+		TextureFog:   {Path: "textures/fog.png"},
+		TexturePaper: {Path: "textures/paper.png"},
 	}
 	for id, res := range imageResources {
 		logger.Log().Info("Loading image", zap.String("path", res.Path))
