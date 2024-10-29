@@ -2,7 +2,7 @@ package game
 
 import (
 	"fmt"
-	// "math"
+	"math"
 	"math/rand/v2"
 	"nowhere-home/src/assets"
 	"nowhere-home/src/common"
@@ -145,12 +145,13 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 		baseY += newTxt.DO.LineSpacing
 	}
 
+	txt0 := scene.Texts[0]
 	textH := scene.Texts[0].DO.LineSpacing
 	scene.LayerText.DTSO.Images[1] = gameState.Loader.LoadImage(assets.TexturePaper).Data
 	scene.LayerText.Uniforms = &assets.MenuTextShaderUniforms{
 		Time:              0,
-		Pos:               [2]float32{0.0, 0.0},
-		Size:              [2]float32{conf.GAME_W * 0.1, float32(textH)},
+		Pos:               [2]float32{float32(txt0.X), float32(txt0.Y)},
+		Size:              [2]float32{conf.GAME_W*0.1 + float32(len(txt0.Txt))*8, float32(textH)},
 		StartingAmplitude: 0.5,
 		StartingFreq:      1.0,
 		Shift:             0.0,
@@ -267,27 +268,19 @@ func (scene *Main_Menu_Scene) Update() error {
 		}
 	}
 
-	uniform, ok := scene.LayerText.Uniforms.(*assets.MenuTextShaderUniforms)
-	if !ok {
-		panic("incorrect casting")
-	}
-
-	uniform.Time += 0.01
-	// v := (math.Sin(uniform.Time) + 1) / 2
-	// uniform.StartingAmplitude = float32(v)
-	curText := scene.Texts[scene.CurrentIdx]
-	uniform.Pos[0] = float32(curText.X)
-	uniform.Pos[1] = float32(curText.Y)
-	uniform.Size[0] = conf.GAME_W*0.1 + float32(len(curText.Txt))*8
-
 	if scene.ShowMenuTexts && scene.CanInteract {
+		uniform, ok := scene.LayerText.Uniforms.(*assets.MenuTextShaderUniforms)
+		if !ok {
+			panic("incorrect casting")
+		}
+
+		uniform.Time += 0.01
+
 		inputHandler := scene.GameState.InputHandler
 		if inputHandler.ActionIsJustReleased(ActionMoveUp) {
 			scene.CurrentIdx--
-			uniform.Time = 0
 		} else if inputHandler.ActionIsJustReleased(ActionMoveDown) {
 			scene.CurrentIdx++
-			uniform.Time = 0
 		} else if inputHandler.ActionIsJustReleased(ActionEnter) {
 			switch scene.CurrentIdx {
 			case MENU_START: //TODO: (Brandon) - go to game
@@ -302,7 +295,18 @@ func (scene *Main_Menu_Scene) Update() error {
 		scene.CurrentIdx = utils.ClampInt(scene.CurrentIdx, 0, len(scene.Texts)-1)
 
 		texNoiseFD := assets.TexFogFrameData
+		curText := scene.Texts[scene.CurrentIdx]
 		scene.LayerText.Y = curText.Y - (curText.SpaceY / 2) - float64((texNoiseFD.H*int(scene.LayerText.ScaleY))/2)
+
+		uniform.Pos[0] = float32(curText.X)
+		uniform.Pos[1] = float32(curText.Y)
+		uniform.Size[0] = conf.GAME_W*0.1 + float32(len(curText.Txt))*8
+		v := (math.Sin(uniform.Time) + 1) / 2
+		v = utils.ClampFloat64(v, 0.4, 0.6)
+		uniform.StartingAmplitude = float32(v)
+		const speed = 4
+		uniform.Velocity[0] = float32(math.Sin(uniform.Time) * speed)
+		uniform.Velocity[1] = float32(math.Cos(uniform.Time) * speed)
 	}
 
 	scene.LayerText.ApplyTransformation()
