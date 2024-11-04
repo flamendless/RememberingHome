@@ -90,9 +90,11 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	if len(keys) == 0 {
 		panic(fmt.Sprintf("No valid '%d' in action key names", ActionEnter))
 	}
+
 	subtitleTxt := NewText(&resFontJamboree18.Face, fmt.Sprintf("press <%s> to continue", keys[0]), true)
 	subtitleTxt.SetPos(conf.GAME_W/2, conf.GAME_H/2+titleTxt.DO.LineSpacing*2)
 	subtitleTxt.SetAlign(text.AlignCenter, text.AlignCenter)
+	subtitleTxt.SpaceY = titleTxt.DO.LineSpacing
 	utils.SetColor(subtitleTxt.DO, 1, 1, 1, 1)
 	scene.TextSubtitle = subtitleTxt
 	scene.FaderSubtitle = effects.NewFader(0, 1, 1)
@@ -148,6 +150,7 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	txt0 := scene.Texts[0]
 	textH := scene.Texts[0].DO.LineSpacing
 	scene.LayerText.DTSO.Images[1] = gameState.Loader.LoadImage(assets.TexturePaper).Data
+	scene.LayerText.Disabled = true
 	scene.LayerText.Uniforms = &assets.MenuTextShaderUniforms{
 		Time:              0,
 		Pos:               [2]float32{float32(txt0.X), float32(txt0.Y)},
@@ -268,45 +271,49 @@ func (scene *Main_Menu_Scene) Update() error {
 		}
 	}
 
-	if scene.ShowMenuTexts && scene.CanInteract {
-		uniform, ok := scene.LayerText.Uniforms.(*assets.MenuTextShaderUniforms)
-		if !ok {
-			panic("incorrect casting")
-		}
+	uniform, ok := scene.LayerText.Uniforms.(*assets.MenuTextShaderUniforms)
+	if !ok {
+		panic("incorrect casting")
+	}
+	uniform.Time += 0.01
+	v := (math.Sin(uniform.Time) + 1) / 2
+	v = utils.ClampFloat64(v, 0.4, 0.6)
+	uniform.StartingAmplitude = float32(v)
+	const speed = 4
+	uniform.Velocity[0] = float32(math.Sin(uniform.Time) * speed)
+	uniform.Velocity[1] = float32(math.Cos(uniform.Time) * speed)
 
-		uniform.Time += 0.01
+	if !scene.ShowMenuTexts && scene.TextSubtitle.GetAlpha() >= 0.9 {
+		scene.LayerText.Disabled = false
+		uniform.Pos[0] = float32(scene.TextSubtitle.X)
+		uniform.Pos[1] = float32(scene.TextSubtitle.Y - scene.TextSubtitle.SpaceY/3.5)
+		uniform.Size[0] = conf.GAME_W*0.1 + float32(len(scene.TextSubtitle.Txt))*1.5
+	}
 
-		inputHandler := scene.GameState.InputHandler
-		if inputHandler.ActionIsJustReleased(ActionMoveUp) {
-			scene.CurrentIdx--
-		} else if inputHandler.ActionIsJustReleased(ActionMoveDown) {
-			scene.CurrentIdx++
-		} else if inputHandler.ActionIsJustReleased(ActionEnter) {
-			switch scene.CurrentIdx {
-			case MENU_START: //TODO: (Brandon) - go to game
-			case MENU_SETTINGS:
-				scene.SelectedIdx = MENU_SETTINGS
-			case MENU_QUIT:
-				return common.ERR_QUIT
-			default:
-				panic(scene.CurrentIdx)
+	if scene.ShowMenuTexts {
+		if scene.CanInteract {
+			inputHandler := scene.GameState.InputHandler
+			if inputHandler.ActionIsJustReleased(ActionMoveUp) {
+				scene.CurrentIdx--
+			} else if inputHandler.ActionIsJustReleased(ActionMoveDown) {
+				scene.CurrentIdx++
+			} else if inputHandler.ActionIsJustReleased(ActionEnter) {
+				switch scene.CurrentIdx {
+				case MENU_START: //TODO: (Brandon) - go to game
+				case MENU_SETTINGS:
+					scene.SelectedIdx = MENU_SETTINGS
+				case MENU_QUIT:
+					return common.ERR_QUIT
+				default:
+					panic(scene.CurrentIdx)
+				}
 			}
 		}
 		scene.CurrentIdx = utils.ClampInt(scene.CurrentIdx, 0, len(scene.Texts)-1)
-
-		texNoiseFD := assets.TexFogFrameData
 		curText := scene.Texts[scene.CurrentIdx]
-		scene.LayerText.Y = curText.Y - (curText.SpaceY / 2) - float64((texNoiseFD.H*int(scene.LayerText.ScaleY))/2)
-
 		uniform.Pos[0] = float32(curText.X)
 		uniform.Pos[1] = float32(curText.Y)
 		uniform.Size[0] = conf.GAME_W*0.1 + float32(len(curText.Txt))*8
-		v := (math.Sin(uniform.Time) + 1) / 2
-		v = utils.ClampFloat64(v, 0.4, 0.6)
-		uniform.StartingAmplitude = float32(v)
-		const speed = 4
-		uniform.Velocity[0] = float32(math.Sin(uniform.Time) * speed)
-		uniform.Velocity[1] = float32(math.Cos(uniform.Time) * speed)
 	}
 
 	scene.LayerText.ApplyTransformation()
@@ -318,41 +325,32 @@ func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
 	canvas := scene.LayerColorize.Canvas
 	canvas.Clear()
 
+	canvas2 := scene.LayerText.Canvas
+	canvas2.Clear()
+
+	uniform, ok := scene.LayerText.Uniforms.(*assets.MenuTextShaderUniforms)
+	if !ok {
+		panic("incorrect casting")
+	}
+
+	uniform.ToShaders(scene.LayerText.DTSO)
+
 	if scene.SelectedIdx == MENU_SETTINGS {
 		canvas.DrawImage(scene.AnimHallway.CurrentFrame, scene.AnimHallway.DIO)
 	} else {
 		canvas.DrawImage(scene.AnimDesk.CurrentFrame, scene.AnimDesk.DIO)
 		scene.TextTitle.Draw(canvas)
-		scene.TextSubtitle.Draw(canvas)
+		scene.TextSubtitle.Draw(canvas2)
 	}
 
 	if scene.ShowMenuTexts {
-		canvas2 := scene.LayerText.Canvas
-		canvas2.Clear()
-		uniform, ok := scene.LayerText.Uniforms.(*assets.MenuTextShaderUniforms)
-		if !ok {
-			panic("incorrect casting")
-		}
-
-		scene.LayerText.DTSO.Uniforms = map[string]any{
-			"Time":              uniform.Time,
-			"Pos":               uniform.Pos,
-			"Size":              uniform.Size,
-			"StartingAmplitude": uniform.StartingAmplitude,
-			"StartingFreq":      uniform.StartingFreq,
-			"Shift":             uniform.Shift,
-			"WhiteCutoff":       uniform.WhiteCutoff,
-			"Velocity":          uniform.Velocity,
-			"Color":             uniform.Color,
-		}
-
 		for _, txt := range scene.Texts {
 			utils.SetColor(txt.DO, 1, 1, 1, 1)
 			txt.Draw(canvas2)
 		}
-
-		scene.LayerText.RenderWithShader(canvas)
 	}
+
+	scene.LayerText.RenderWithShader(canvas)
 
 	scene.LayerColorize.RenderWithShader(screen)
 }
