@@ -3,8 +3,8 @@ package game
 import (
 	"fmt"
 	"image"
-	"nowhere-home/src/assets"
-	"nowhere-home/src/conf"
+	"remembering-home/src/assets"
+	"remembering-home/src/conf"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	input "github.com/quasilyte/ebitengine-input"

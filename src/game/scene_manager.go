@@ -3,7 +3,7 @@ package game
 import (
 	"image"
 	"image/color"
-	"nowhere-home/src/effects"
+	"remembering-home/src/effects"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )

@@ -1,7 +1,7 @@
 package assets
 
 import (
-	"nowhere-home/src/logger"
+	"remembering-home/src/logger"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	resource "github.com/quasilyte/ebitengine-resource"

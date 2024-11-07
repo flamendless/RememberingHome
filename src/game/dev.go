@@ -3,7 +3,7 @@ package game
 import (
 	"fmt"
 	"image/color"
-	"nowhere-home/src/conf"
+	"remembering-home/src/conf"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"

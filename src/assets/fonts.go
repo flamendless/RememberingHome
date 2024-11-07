@@ -1,7 +1,7 @@
 package assets
 
 import (
-	"nowhere-home/src/logger"
+	"remembering-home/src/logger"
 
 	resource "github.com/quasilyte/ebitengine-resource"
 	"go.uber.org/zap"

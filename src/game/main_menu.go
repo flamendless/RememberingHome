@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"math"
 	"math/rand/v2"
-	"nowhere-home/src/assets"
-	"nowhere-home/src/common"
-	"nowhere-home/src/conf"
-	"nowhere-home/src/effects"
-	"nowhere-home/src/utils"
+	"remembering-home/src/assets"
+	"remembering-home/src/common"
+	"remembering-home/src/conf"
+	"remembering-home/src/effects"
+	"remembering-home/src/utils"
 	"strconv"
 	"time"
 
@@ -79,7 +79,7 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	scene.LayerColorize.Disabled = true
 
 	resFontJamboree46 := gameState.Loader.LoadFont(assets.FontJamboree46)
-	titleTxt := NewText(&resFontJamboree46.Face, "Nowhere Home", true)
+	titleTxt := NewText(&resFontJamboree46.Face, "Remembering Home", true)
 	titleTxt.SetPos(conf.GAME_W/2, conf.GAME_H/2)
 	titleTxt.SetAlign(text.AlignCenter, text.AlignCenter)
 	utils.SetColor(titleTxt.DO, 1, 1, 1, 1)

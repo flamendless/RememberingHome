@@ -1,8 +1,8 @@
 package game
 
 import (
-	"nowhere-home/src/assets"
-	"nowhere-home/src/conf"
+	"remembering-home/src/assets"
+	"remembering-home/src/conf"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"

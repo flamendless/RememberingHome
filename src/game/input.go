@@ -1,7 +1,7 @@
 package game
 
 import (
-	"nowhere-home/src/conf"
+	"remembering-home/src/conf"
 
 	input "github.com/quasilyte/ebitengine-input"
 )

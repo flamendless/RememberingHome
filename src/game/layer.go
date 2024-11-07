@@ -2,7 +2,7 @@ package game
 
 import (
 	"fmt"
-	"nowhere-home/src/assets"
+	"remembering-home/src/assets"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )

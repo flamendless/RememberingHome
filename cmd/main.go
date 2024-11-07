@@ -2,11 +2,11 @@ package main
 
 import (
 	"errors"
-	"nowhere-home/src/assets"
-	"nowhere-home/src/common"
-	"nowhere-home/src/conf"
-	"nowhere-home/src/game"
-	"nowhere-home/src/logger"
+	"remembering-home/src/assets"
+	"remembering-home/src/common"
+	"remembering-home/src/conf"
+	"remembering-home/src/game"
+	"remembering-home/src/logger"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
