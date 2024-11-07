@@ -14,6 +14,7 @@ const (
 	ImageFlamLogo
 	ImageSheetWits
 	ImageSheetDesk
+	ImageSheetTitle
 	ImageBGDoor
 	ImageBGHallway
 	TextureNoise
@@ -30,9 +31,10 @@ func SetImageResources(loader *resource.Loader) {
 		ImageFlamLogo:  {Path: "splash/logo_flamendless.png"},
 		ImageSheetWits: {Path: "splash/sheet_wits.png"},
 
-		ImageSheetDesk: {Path: "main_menu/sheet_desk_colored.png"},
-		ImageBGDoor:    {Path: "main_menu/bg_door.png"},
-		ImageBGHallway: {Path: "main_menu/bg_hallway.png"},
+		ImageSheetDesk:  {Path: "main_menu/sheet_desk_colored.png"},
+		ImageSheetTitle: {Path: "main_menu/sheet_title.png"},
+		ImageBGDoor:     {Path: "main_menu/bg_door.png"},
+		ImageBGHallway:  {Path: "main_menu/bg_hallway.png"},
 
 		TextureNoise: {Path: "textures/noise.png"},
 		TextureFog:   {Path: "textures/fog.png"},

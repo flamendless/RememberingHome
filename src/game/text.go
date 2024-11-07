@@ -12,7 +12,6 @@ type Text struct {
 	Txt    string
 	Static bool
 	X, Y   float64
-	SpaceY float64
 	Show   bool
 }
 
