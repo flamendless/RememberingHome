@@ -25,6 +25,11 @@ const (
 	MENU_QUIT
 )
 
+const (
+	BASE_X = 32.0
+	SIZE_X = float32(128.0)
+)
+
 type Main_Menu_Scene struct {
 	GameState        *Game_State
 	TimerSys         *ebitick.TimerSystem
@@ -93,7 +98,7 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	scene.AnimTitle.Update()
 	scene.AnimTitle.DIO.GeoM.Scale(scaleTitle, scaleTitle)
 	scene.AnimTitle.DIO.GeoM.Translate(
-		32,
+		BASE_X,
 		conf.GAME_H/2-float64(titleFrameH)*scaleTitle/2,
 	)
 
@@ -136,15 +141,14 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 		conf.GAME_H/2-float64(hallwayFrameH)*scaleHallway/2,
 	)
 
-	baseX := float64(conf.GAME_W / 2)
 	baseY := conf.GAME_H/2 + float64(deskFrameH)*scaleDesk/2 + 8.0
 	resFontJamboree26 := gameState.Loader.LoadFont(assets.FontJamboree26)
 
 	texts := []string{"Start", "Settings", "Quit"}
 	for _, txt := range texts {
 		newTxt := NewText(&resFontJamboree26.Face, txt, true)
-		newTxt.SetPos(baseX, baseY)
-		newTxt.SetAlign(text.AlignCenter, text.AlignStart)
+		newTxt.SetPos(BASE_X, baseY)
+		newTxt.SetAlign(text.AlignStart, text.AlignStart)
 		utils.SetColor(newTxt.DO, 1, 1, 1, 1)
 		scene.Texts = append(scene.Texts, newTxt)
 		baseY += newTxt.DO.LineSpacing
@@ -340,15 +344,14 @@ func (scene *Main_Menu_Scene) Update() error {
 					panic(scene.CurrentIdx)
 				}
 			}
-			// scene.AnimTitle.PauseAtFrame(scene.CurrentIdx)
-			// scene.AnimTitle.Update()
 		}
 		scene.CurrentIdx = utils.ClampInt(scene.CurrentIdx, 0, len(scene.Texts)-1)
 		curText := scene.Texts[scene.CurrentIdx]
 		th := curText.Face.Metrics().HAscent
-		uniform.Pos[0] = float32(curText.X)
+
+		uniform.Pos[0] = BASE_X*0.3 + SIZE_X
 		uniform.Pos[1] = float32(curText.Y)
-		uniform.Size[0] = conf.GAME_W*0.1 + float32(len(curText.Txt))*8
+		uniform.Size[0] = SIZE_X
 		uniform.Size[1] = float32(th) * 1.2
 	}
 
@@ -387,7 +390,6 @@ func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
 	}
 
 	scene.LayerText.RenderWithShader(canvas)
-
 	scene.LayerColorize.RenderWithShader(screen)
 }
 
