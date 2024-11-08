@@ -9,6 +9,8 @@ import (
 const (
 	ActionMoveUp input.Action = iota
 	ActionMoveDown
+	ActionMoveLeft
+	ActionMoveRight
 	ActionEnter
 )
 
@@ -30,9 +32,11 @@ func NewInputSystem() *input.System {
 
 func NewInputHandler(system *input.System) *input.Handler {
 	keymap := input.Keymap{
-		ActionMoveUp:   {input.KeyGamepadUp, input.KeyUp, input.KeyW},
-		ActionMoveDown: {input.KeyGamepadDown, input.KeyDown, input.KeyS},
-		ActionEnter:    {input.KeyGamepadStart, input.KeyEnter, input.KeySpace, input.KeyE},
+		ActionMoveUp:    {input.KeyGamepadUp, input.KeyUp, input.KeyW},
+		ActionMoveDown:  {input.KeyGamepadDown, input.KeyDown, input.KeyS},
+		ActionMoveLeft:  {input.KeyGamepadLeft, input.KeyLeft, input.KeyA},
+		ActionMoveRight: {input.KeyGamepadRight, input.KeyRight, input.KeyD},
+		ActionEnter:     {input.KeyGamepadStart, input.KeyEnter, input.KeySpace, input.KeyE},
 	}
 	handler := system.NewHandler(0, keymap)
 	return handler

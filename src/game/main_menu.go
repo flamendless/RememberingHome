@@ -26,27 +26,36 @@ const (
 )
 
 const (
+	MENU_QUIT_CANCEL = iota
+	MENU_QUIT_CONFIRM
+)
+
+const (
 	BASE_X = 32.0
 	SIZE_X = float32(128.0)
 )
 
 type Main_Menu_Scene struct {
-	GameState        *Game_State
-	TimerSys         *ebitick.TimerSystem
-	CurrentStateName string
-	Routine          *routine.Routine
-	TextSubtitle     *Text
-	FaderSubtitle    *effects.Fader
-	ShowMenuTexts    bool
-	CanInteract      bool
-	AnimDesk         *AnimationPlayer
-	AnimHallway      *AnimationPlayer
-	AnimTitle        *AnimationPlayer
-	Texts            []*Text
-	CurrentIdx       int
-	SelectedIdx      int
-	LayerColorize    *Layer
-	LayerText        *Layer
+	GameState            *Game_State
+	TimerSys             *ebitick.TimerSystem
+	CurrentStateName     string
+	Routine              *routine.Routine
+	TextSubtitle         *Text
+	TextQuit             *Text
+	FaderSubtitle        *effects.Fader
+	ShowMenuTexts        bool
+	ShowQuitSubMenuTexts bool
+	CanInteract          bool
+	AnimDesk             *AnimationPlayer
+	AnimHallway          *AnimationPlayer
+	AnimTitle            *AnimationPlayer
+	Texts                []*Text
+	QuitTexts            []*Text
+	CurrentIdx           int
+	CurrentQuitIdx       int
+	SelectedIdx          int
+	LayerColorize        *Layer
+	LayerText            *Layer
 }
 
 func (scene *Main_Menu_Scene) GetName() string {
@@ -61,7 +70,8 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	scene := Main_Menu_Scene{
 		GameState: gameState,
 		TimerSys:  ebitick.NewTimerSystem(),
-		Texts:     make([]*Text, 0, 16),
+		Texts:     make([]*Text, 0, 3),
+		QuitTexts: make([]*Text, 0, 2),
 		LayerColorize: NewLayerWithShader(
 			"colorize layer",
 			conf.GAME_W,
@@ -103,7 +113,7 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	)
 
 	subtitleTxt := NewText(&resFontJamboree18.Face, fmt.Sprintf("press <%s> to continue", keys[0]), true)
-	subtitleTxt.SetPos(conf.GAME_W/2, conf.GAME_H*0.8)
+	subtitleTxt.SetPos(conf.GAME_W/2, conf.GAME_H-subtitleTxt.Face.Metrics().HAscent*2)
 	subtitleTxt.SetAlign(text.AlignCenter, text.AlignCenter)
 	utils.SetColor(subtitleTxt.DO, 1, 1, 1, 1)
 	scene.TextSubtitle = subtitleTxt
@@ -152,6 +162,35 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 		utils.SetColor(newTxt.DO, 1, 1, 1, 1)
 		scene.Texts = append(scene.Texts, newTxt)
 		baseY += newTxt.DO.LineSpacing
+	}
+
+	quitTxt := NewText(&resFontJamboree18.Face, "Are you sure you want to quit?", true)
+	quitTxt.SetPos(conf.GAME_W/2, conf.GAME_H-quitTxt.Face.Metrics().HAscent*4)
+	quitTxt.SetAlign(text.AlignCenter, text.AlignCenter)
+	utils.SetColor(quitTxt.DO, 1, 1, 1, 1)
+	scene.TextQuit = quitTxt
+
+	gap := 64.0
+	{
+		newTxt := NewText(&resFontJamboree26.Face, "No", true)
+		newTxt.SetPos(
+			float64(conf.GAME_W/2)-gap,
+			conf.GAME_H-newTxt.Face.Metrics().HAscent,
+		)
+		newTxt.SetAlign(text.AlignEnd, text.AlignCenter)
+		utils.SetColor(newTxt.DO, 1, 1, 1, 1)
+		scene.QuitTexts = append(scene.QuitTexts, newTxt)
+	}
+
+	{
+		newTxt := NewText(&resFontJamboree26.Face, "Yes", true)
+		newTxt.SetPos(
+			float64(conf.GAME_W/2)+gap,
+			conf.GAME_H-newTxt.Face.Metrics().HAscent,
+		)
+		newTxt.SetAlign(text.AlignStart, text.AlignCenter)
+		utils.SetColor(newTxt.DO, 1, 1, 1, 1)
+		scene.QuitTexts = append(scene.QuitTexts, newTxt)
 	}
 
 	txt0 := scene.Texts[0]
@@ -339,12 +378,16 @@ func (scene *Main_Menu_Scene) Update() error {
 				case MENU_SETTINGS:
 					scene.SelectedIdx = MENU_SETTINGS
 				case MENU_QUIT:
-					return common.ERR_QUIT
+					scene.ShowMenuTexts = false
+					scene.CurrentQuitIdx = MENU_QUIT_CANCEL
+					scene.SelectedIdx = MENU_QUIT
+					return nil
 				default:
 					panic(scene.CurrentIdx)
 				}
 			}
 		}
+
 		scene.CurrentIdx = utils.ClampInt(scene.CurrentIdx, 0, len(scene.Texts)-1)
 		curText := scene.Texts[scene.CurrentIdx]
 		th := curText.Face.Metrics().HAscent
@@ -352,6 +395,42 @@ func (scene *Main_Menu_Scene) Update() error {
 		uniform.Pos[0] = BASE_X*0.3 + SIZE_X
 		uniform.Pos[1] = float32(curText.Y)
 		uniform.Size[0] = SIZE_X
+		uniform.Size[1] = float32(th) * 1.2
+	}
+
+	if !scene.ShowMenuTexts && scene.CurrentIdx == MENU_QUIT {
+		if scene.CanInteract {
+			inputHandler := scene.GameState.InputHandler
+			if inputHandler.ActionIsJustReleased(ActionMoveLeft) {
+				scene.CurrentQuitIdx = MENU_QUIT_CANCEL
+			} else if inputHandler.ActionIsJustReleased(ActionMoveRight) {
+				scene.CurrentQuitIdx = MENU_QUIT_CONFIRM
+			} else if inputHandler.ActionIsJustReleased(ActionEnter) {
+				switch scene.CurrentQuitIdx {
+				case MENU_QUIT_CANCEL:
+					scene.ShowMenuTexts = true
+					scene.CurrentQuitIdx = MENU_QUIT_CANCEL
+					scene.SelectedIdx = 0
+					scene.CurrentIdx = MENU_QUIT
+					return nil
+				case MENU_QUIT_CONFIRM:
+					return common.ERR_QUIT
+				default:
+					panic(scene.CurrentQuitIdx)
+				}
+			}
+		}
+
+		sizex := conf.GAME_W * 0.05
+		curText := scene.QuitTexts[scene.CurrentQuitIdx]
+		th := curText.Face.Metrics().HAscent
+		if curText.DO.PrimaryAlign == text.AlignEnd {
+			uniform.Pos[0] = float32(curText.X) - float32(curText.Face.Metrics().HAscent)/2
+		} else if curText.DO.PrimaryAlign == text.AlignStart {
+			uniform.Pos[0] = float32(curText.X) + float32(curText.Face.Metrics().HAscent)/2
+		}
+		uniform.Pos[1] = float32(curText.Y) - float32(curText.Face.Metrics().HAscent)/1.5
+		uniform.Size[0] = float32(sizex)
 		uniform.Size[1] = float32(th) * 1.2
 	}
 
@@ -374,9 +453,18 @@ func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
 
 	uniform.ToShaders(scene.LayerText.DTSO)
 
-	if scene.SelectedIdx == MENU_SETTINGS {
+	switch scene.SelectedIdx {
+	case MENU_SETTINGS:
 		canvas.DrawImage(scene.AnimHallway.CurrentFrame, scene.AnimHallway.DIO)
-	} else {
+	case MENU_QUIT:
+		canvas.DrawImage(scene.AnimDesk.CurrentFrame, scene.AnimDesk.DIO)
+		canvas.DrawImage(scene.AnimTitle.CurrentFrame, scene.AnimTitle.DIO)
+		for _, txt := range scene.QuitTexts {
+			utils.SetColor(txt.DO, 1, 1, 1, 1)
+			txt.Draw(canvas2)
+		}
+		scene.TextQuit.Draw(canvas2)
+	default:
 		canvas.DrawImage(scene.AnimDesk.CurrentFrame, scene.AnimDesk.DIO)
 		canvas.DrawImage(scene.AnimTitle.CurrentFrame, scene.AnimTitle.DIO)
 		scene.TextSubtitle.Draw(canvas2)
