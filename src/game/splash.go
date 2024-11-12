@@ -62,8 +62,8 @@ func NewSplashScene(gameState *Game_State) *Splash_Scene {
 		float64(conf.GAME_H/2-float64(witsFrameH)*scaleWitsAnim/2),
 	)
 
-	sceneRoutine := routine.New()
-	sceneRoutine.Define(
+	scene.Routine = routine.New()
+	scene.Routine.Define(
 		"splash scene",
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
 			scene.CurrentStateName = "flamendless logo fading in"
@@ -93,9 +93,7 @@ func NewSplashScene(gameState *Game_State) *Splash_Scene {
 			return routine.FlowIdle
 		}),
 	)
-	sceneRoutine.Run()
-	scene.Routine = sceneRoutine
-
+	scene.Routine.Run()
 	return &scene
 }
 

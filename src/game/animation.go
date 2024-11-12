@@ -33,7 +33,7 @@ func NewAnimationPlayer(spriteSheet *ebiten.Image) *AnimationPlayer {
 		Paused:            false,
 		Animations:        make(map[string]*Animation),
 		CurrentFrameIndex: 0,
-		DIO:               &ebiten.DrawImageOptions{
+		DIO: &ebiten.DrawImageOptions{
 			Filter: ebiten.FilterNearest,
 		},
 	}

@@ -86,9 +86,7 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 		),
 	}
 
-	scene.LayerColorize.DRSO.Uniforms = map[string]any{
-		"Color": [4]float32{1, 1, 1, 1},
-	}
+	scene.LayerColorize.DRSO.Uniforms = map[string]any{"Color": [4]float32{1, 1, 1, 1}}
 	scene.LayerColorize.Disabled = true
 
 	resFontJamboree18 := gameState.Loader.LoadFont(assets.FontJamboree18)
@@ -98,10 +96,8 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	}
 
 	titleFrameW, titleFrameH := assets.SheetTitleFrameData.W, assets.SheetTitleFrameData.H
-	scaleTitle := float64(min(conf.GAME_W/titleFrameW, conf.GAME_H/titleFrameH))
-	scaleTitle *= 0.5
-	resTitle := gameState.Loader.LoadImage(assets.ImageSheetTitle)
-	scene.AnimTitle = NewAnimationPlayer(resTitle.Data)
+	scaleTitle := float64(min(conf.GAME_W/titleFrameW, conf.GAME_H/titleFrameH)) * 0.5
+	scene.AnimTitle = NewAnimationPlayer(gameState.Loader.LoadImage(assets.ImageSheetTitle).Data)
 	scene.AnimTitle.AddStateAnimation("row1", 0, 0, titleFrameW, titleFrameH, assets.SheetTitleFrameData.MaxCols, false)
 	scene.AnimTitle.SetFPS(0)
 	utils.DIOReplaceAlpha(scene.AnimTitle.DIO, 0)
@@ -122,8 +118,7 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 
 	deskFrameW, deskFrameH := assets.SheetDeskFrameData.W, assets.SheetDeskFrameData.H
 	scaleDesk := float64(min(conf.GAME_W/deskFrameW, conf.GAME_H/deskFrameH))
-	resDesk := gameState.Loader.LoadImage(assets.ImageSheetDesk)
-	scene.AnimDesk = NewAnimationPlayer(resDesk.Data)
+	scene.AnimDesk = NewAnimationPlayer(gameState.Loader.LoadImage(assets.ImageSheetDesk).Data)
 	scene.AnimDesk.AddStateAnimation("row1", 0, 0, deskFrameW, deskFrameH, assets.SheetDeskFrameData.MaxCols, false)
 	scene.AnimDesk.AddStateAnimation("row2", 0, 64, deskFrameW, deskFrameH, assets.SheetDeskFrameData.MaxCols, false)
 	scene.AnimDesk.AddStateAnimation("row3", 0, 128, deskFrameW, deskFrameH, 1, false)
@@ -139,8 +134,7 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 
 	hallwayFrameW, hallwayFrameH := assets.BGHallwayFrameData.W, assets.BGHallwayFrameData.H
 	scaleHallway := float64(min(conf.GAME_W/hallwayFrameW, conf.GAME_H/hallwayFrameH))
-	resHallway := gameState.Loader.LoadImage(assets.ImageBGHallway)
-	scene.AnimHallway = NewAnimationPlayer(resHallway.Data)
+	scene.AnimHallway = NewAnimationPlayer(gameState.Loader.LoadImage(assets.ImageBGHallway).Data)
 	scene.AnimHallway.AddStateAnimation("row1", 0, 0, hallwayFrameW, hallwayFrameH, assets.BGHallwayFrameData.MaxCols, false)
 	scene.AnimHallway.SetFPS(0)
 	utils.DIOReplaceAlpha(scene.AnimHallway.DIO, 1)
@@ -154,8 +148,7 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	baseY := conf.GAME_H/2 + float64(deskFrameH)*scaleDesk/2 + 8.0
 	resFontJamboree26 := gameState.Loader.LoadFont(assets.FontJamboree26)
 
-	texts := []string{"Start", "Settings", "Quit"}
-	for _, txt := range texts {
+	for _, txt := range []string{"Start", "Settings", "Quit"} {
 		newTxt := NewText(&resFontJamboree26.Face, txt, true)
 		newTxt.SetPos(BASE_X, baseY)
 		newTxt.SetAlign(text.AlignStart, text.AlignStart)
@@ -170,11 +163,11 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	utils.SetColor(quitTxt.DO, 1, 1, 1, 1)
 	scene.TextQuit = quitTxt
 
-	gap := 64.0
+	const GAP = 64.0
 	{
 		newTxt := NewText(&resFontJamboree26.Face, "No", true)
 		newTxt.SetPos(
-			float64(conf.GAME_W/2)-gap,
+			float64(conf.GAME_W/2)-GAP,
 			conf.GAME_H-newTxt.Face.Metrics().HAscent,
 		)
 		newTxt.SetAlign(text.AlignEnd, text.AlignCenter)
@@ -185,7 +178,7 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	{
 		newTxt := NewText(&resFontJamboree26.Face, "Yes", true)
 		newTxt.SetPos(
-			float64(conf.GAME_W/2)+gap,
+			float64(conf.GAME_W/2)+GAP,
 			conf.GAME_H-newTxt.Face.Metrics().HAscent,
 		)
 		newTxt.SetAlign(text.AlignStart, text.AlignCenter)
@@ -231,8 +224,8 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	scene.LayerText.Vertices = vx
 	scene.LayerText.Indices = ix
 
-	sceneRoutine := routine.New()
-	sceneRoutine.Define(
+	scene.Routine = routine.New()
+	scene.Routine.Define(
 		"main menu scene",
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
 			scene.CurrentStateName = "title text animation"
@@ -285,9 +278,7 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 			return routine.FlowIdle
 		}),
 	)
-	sceneRoutine.Run()
-	scene.Routine = sceneRoutine
-
+	scene.Routine.Run()
 	return &scene
 }
 
@@ -316,6 +307,10 @@ func (scene *Main_Menu_Scene) Update() error {
 	scene.FaderSubtitle.Update()
 	cs := scene.FaderSubtitle.GetCS()
 	scene.TextSubtitle.DO.ColorScale = *cs
+
+	if scene.GameState.SceneManager.IsFading() {
+		return nil
+	}
 
 	if scene.AnimTitle.DIO.ColorScale.A() < 1.0 {
 		scene.AnimTitle.DIO.ColorScale = *cs
@@ -352,9 +347,9 @@ func (scene *Main_Menu_Scene) Update() error {
 	v := (math.Sin(uniform.Time) + 1) / 2
 	v = utils.ClampFloat64(v, 0.4, 0.6)
 	uniform.StartingAmplitude = float32(v)
-	const speed = 4
-	uniform.Velocity[0] = float32(math.Sin(uniform.Time) * speed)
-	uniform.Velocity[1] = float32(math.Cos(uniform.Time) * speed)
+	const SPEED = 4
+	uniform.Velocity[0] = float32(math.Sin(uniform.Time) * SPEED)
+	uniform.Velocity[1] = float32(math.Cos(uniform.Time) * SPEED)
 
 	if !scene.ShowMenuTexts && scene.TextSubtitle.GetAlpha() >= 0.9 {
 		scene.LayerText.Disabled = false
@@ -375,8 +370,11 @@ func (scene *Main_Menu_Scene) Update() error {
 			} else if inputHandler.ActionIsJustReleased(ActionEnter) {
 				switch scene.CurrentIdx {
 				case MENU_START: //TODO: (Brandon) - go to game
+					scene.GameState.SceneManager.GoTo(NewSplashScene(scene.GameState))
+					return nil
 				case MENU_SETTINGS:
 					scene.SelectedIdx = MENU_SETTINGS
+					return common.ERR_NOT_YET_IMPL
 				case MENU_QUIT:
 					scene.ShowMenuTexts = false
 					scene.CurrentQuitIdx = MENU_QUIT_CANCEL
@@ -391,7 +389,6 @@ func (scene *Main_Menu_Scene) Update() error {
 		scene.CurrentIdx = utils.ClampInt(scene.CurrentIdx, 0, len(scene.Texts)-1)
 		curText := scene.Texts[scene.CurrentIdx]
 		th := curText.Face.Metrics().HAscent
-
 		uniform.Pos[0] = BASE_X*0.3 + SIZE_X
 		uniform.Pos[1] = float32(curText.Y)
 		uniform.Size[0] = SIZE_X
@@ -468,12 +465,11 @@ func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
 		canvas.DrawImage(scene.AnimDesk.CurrentFrame, scene.AnimDesk.DIO)
 		canvas.DrawImage(scene.AnimTitle.CurrentFrame, scene.AnimTitle.DIO)
 		scene.TextSubtitle.Draw(canvas2)
-	}
-
-	if scene.ShowMenuTexts {
-		for _, txt := range scene.Texts {
-			utils.SetColor(txt.DO, 1, 1, 1, 1)
-			txt.Draw(canvas2)
+		if scene.ShowMenuTexts {
+			for _, txt := range scene.Texts {
+				utils.SetColor(txt.DO, 1, 1, 1, 1)
+				txt.Draw(canvas2)
+			}
 		}
 	}
 

@@ -96,3 +96,7 @@ func (s *Scene_Manager) IsFadeInFinished() bool {
 func (s *Scene_Manager) IsFadeOutFinished() bool {
 	return s.fader.Alpha >= s.fader.MaxAlpha
 }
+
+func (s *Scene_Manager) IsFading() bool {
+	return s.next != nil
+}
