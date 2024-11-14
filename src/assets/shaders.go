@@ -13,16 +13,16 @@ const (
 	ShaderTest
 	ShaderColorize
 	ShaderWater
-	ShaderMenuText
+	ShaderTextRedBG
 )
 
 func SetShaderResources(loader *resource.Loader) {
 	logger.Log().Info("Setting shader resources...")
 	shaderResources := map[resource.ShaderID]resource.ShaderInfo{
 		// ShaderTest:     {Path: "shaders/test.kage"},
-		ShaderColorize: {Path: "shaders/colorize.kage"},
-		ShaderWater:    {Path: "shaders/water.kage"},
-		ShaderMenuText: {Path: "shaders/menutext.kage"},
+		ShaderColorize:  {Path: "shaders/colorize.kage"},
+		ShaderWater:     {Path: "shaders/water.kage"},
+		ShaderTextRedBG: {Path: "shaders/text_red_bg.kage"},
 	}
 	for id, res := range shaderResources {
 		logger.Log().Info("Loading shader", zap.String("path", res.Path))
@@ -31,7 +31,7 @@ func SetShaderResources(loader *resource.Loader) {
 	}
 }
 
-type ShaderUniforms interface{
+type ShaderUniforms interface {
 	ToShaders(DTSO *ebiten.DrawTrianglesShaderOptions)
 }
 

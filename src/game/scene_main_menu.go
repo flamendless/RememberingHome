@@ -79,10 +79,10 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 			gameState.Loader.LoadShader(assets.ShaderColorize).Data,
 		),
 		LayerText: NewLayerWithTriangleShader(
-			"menu texts layer",
+			"texts layer",
 			conf.GAME_W,
 			conf.GAME_H,
-			gameState.Loader.LoadShader(assets.ShaderMenuText).Data,
+			gameState.Loader.LoadShader(assets.ShaderTextRedBG).Data,
 		),
 	}
 
