@@ -377,7 +377,7 @@ func (scene *Main_Menu_Scene) Update() error {
 			} else if inputHandler.ActionIsJustReleased(ActionEnter) {
 				switch scene.CurrentIdx {
 				case MENU_START: //TODO: (Brandon) - go to game
-					scene.GameState.SceneManager.GoTo(NewSplashScene(scene.GameState))
+					scene.GameState.SceneManager.GoTo(NewIntroScene(scene.GameState))
 					return nil
 				case MENU_SETTINGS:
 					scene.SelectedIdx = MENU_SETTINGS
