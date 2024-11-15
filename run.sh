@@ -20,6 +20,13 @@ check() {
 	smrcptr ./...
 	nilaway ./...
 	errcheck ./...
+
+	set +f
+	local gofiles=( cmd/*.go src/**/*.go )
+	for file in "${gofiles[@]}"; do
+		goimports -w -local -v "$file"
+	done
+	set -f
 }
 
 fmt() {

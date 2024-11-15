@@ -2,12 +2,12 @@ package main
 
 import (
 	"errors"
+	"os"
 	"remembering-home/src/assets"
 	"remembering-home/src/common"
 	"remembering-home/src/conf"
 	"remembering-home/src/game"
 	"remembering-home/src/logger"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
