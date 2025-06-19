@@ -49,14 +49,24 @@ sc() {
 }
 
 runwin() {
-	GOOS=windows \
-		go build -o out/game.exe ./cmd/main.go \
-		&& cp out/game.exe /mnt/c/Users/flame/game.exe \
-		&& /mnt/c/Users/flame/game.exe --dev
+	# GOOS=windows \
+	# 	go build -o out/game.exe ./cmd/main.go \
+	# 	&& cp out/game.exe /mnt/c/Users/flame/game.exe \
+	# 	&& /mnt/c/Users/flame/game.exe --dev
+	GOOS=windows go run ./cmd/main.go --dev
+}
+
+runlinux() {
+	GOOS=linux go run ./cmd/main.go --dev
 }
 
 run() {
-	GOOS=linux go run ./cmd/main.go --dev
+	local -; set -x;
+	if ! grep -qi Microsoft /proc/version; then
+		runlinux
+	else
+		runwin
+	fi
 }
 
 if [ "$#" -eq 0 ]; then
