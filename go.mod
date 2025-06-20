@@ -84,4 +84,5 @@ tool (
 	github.com/mdempsky/unconvert
 	github.com/nikolaydubina/smrcptr
 	go.uber.org/nilaway/cmd/nilaway
+	golang.org/x/tools/cmd/goimports
 )
