@@ -14,7 +14,7 @@ var (
 
 const (
 	GAME_TITLE   = "Remembering Home"
-	GAME_VERSION = "0.0.1"
+	GAME_VERSION = "v0.0.1"
 	WINDOW_W     = 1280
 	WINDOW_H     = 640
 	GAME_W       = 1280
@@ -30,7 +30,7 @@ func init() {
 	}
 }
 
-func LogConf() {
+func Log() {
 	logger.Log().Info(
 		"Game Config",
 		zap.Bool("dev", DEV),

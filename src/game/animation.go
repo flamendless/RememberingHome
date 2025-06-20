@@ -5,6 +5,7 @@ package game
 import (
 	"image"
 	"math"
+	"remembering-home/src/errs"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -69,7 +70,7 @@ func (ap *AnimationPlayer) AddStateAnimation(
 
 	dataAnim, ok := ap.Animations[ap.CurrentState]
 	if !ok {
-		panic("nil element in array")
+		panic(errs.ERR_NIL_ELEM)
 	}
 	ap.CurrentFrame = dataAnim.Frames[ap.CurrentFrameIndex]
 
@@ -93,7 +94,7 @@ func (ap *AnimationPlayer) State() string {
 func (ap *AnimationPlayer) CurrentStateFPS() float64 {
 	dataAnim, ok := ap.Animations[ap.State()]
 	if !ok {
-		panic("nil element in array")
+		panic(errs.ERR_NIL_ELEM)
 	}
 	return dataAnim.FPS
 }
@@ -115,7 +116,7 @@ func (ap *AnimationPlayer) SetState(state string) {
 func (ap *AnimationPlayer) PauseAtFrame(frameIndex int) {
 	dataAnim, ok := ap.Animations[ap.State()]
 	if !ok {
-		panic("nil element in array")
+		panic(errs.ERR_NIL_ELEM)
 	}
 
 	if frameIndex < len(dataAnim.Frames) && frameIndex >= 0 {
@@ -127,7 +128,7 @@ func (ap *AnimationPlayer) PauseAtFrame(frameIndex int) {
 func (ap *AnimationPlayer) GetLastFrameCount() int {
 	dataAnim, ok := ap.Animations[ap.CurrentState]
 	if !ok {
-		panic("nil element in array")
+		panic(errs.ERR_NIL_ELEM)
 	}
 	return len(dataAnim.Frames) - 1
 }
@@ -139,7 +140,7 @@ func (ap *AnimationPlayer) IsInLastFrame() bool {
 func (ap *AnimationPlayer) Update() {
 	dataAnim, ok := ap.Animations[ap.CurrentState]
 	if !ok {
-		panic("nil element in array")
+		panic(errs.ERR_NIL_ELEM)
 	}
 
 	if !ap.Paused {

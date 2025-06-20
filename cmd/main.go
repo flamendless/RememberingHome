@@ -4,8 +4,8 @@ import (
 	"errors"
 	"os"
 	"remembering-home/src/assets"
-	"remembering-home/src/common"
 	"remembering-home/src/conf"
+	"remembering-home/src/errs"
 	"remembering-home/src/game"
 	"remembering-home/src/logger"
 
@@ -13,8 +13,7 @@ import (
 )
 
 func main() {
-	logger.InitLog()
-	conf.LogConf()
+	conf.Log()
 
 	logger.Log().Info("Setting up resources loader...")
 	loader := assets.NewAssetsLoader()
@@ -29,7 +28,7 @@ func main() {
 	sceneManager.GoTo(game.NewMainMenuScene(gameState))
 
 	if err := ebiten.RunGame(gameState); err != nil {
-		if errors.Is(err, common.ERR_QUIT) {
+		if errors.Is(err, errs.ERR_QUIT) {
 			logger.Log().Info("Successfully exited the game")
 			os.Exit(0)
 			return

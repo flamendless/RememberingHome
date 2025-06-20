@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math"
 	"remembering-home/src/assets"
-	"remembering-home/src/common"
 	"remembering-home/src/conf"
 	"remembering-home/src/effects"
+	"remembering-home/src/errs"
 	"remembering-home/src/utils"
 	"strconv"
 	"time"
@@ -94,7 +94,7 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	resFontJamboree18 := gameState.Loader.LoadFont(assets.FontJamboree18)
 	keys := scene.GameState.InputHandler.ActionKeyNames(ActionEnter, input.KeyboardDevice)
 	if len(keys) == 0 {
-		panic(fmt.Sprintf("No valid '%d' in action key names", ActionEnter))
+		panic(fmt.Errorf("No valid '%d' in action key names", ActionEnter))
 	}
 
 	// titleFrameW, titleFrameH := assets.SheetTitleFrameData.W, assets.SheetTitleFrameData.H
@@ -381,7 +381,7 @@ func (scene *Main_Menu_Scene) Update() error {
 					return nil
 				case MENU_SETTINGS:
 					scene.SelectedIdx = MENU_SETTINGS
-					return common.ERR_NOT_YET_IMPL
+					return errs.ERR_NOT_YET_IMPL
 				case MENU_QUIT:
 					scene.ShowMenuTexts = false
 					scene.CurrentQuitIdx = MENU_QUIT_CANCEL
@@ -418,7 +418,7 @@ func (scene *Main_Menu_Scene) Update() error {
 					scene.CurrentIdx = MENU_QUIT
 					return nil
 				case MENU_QUIT_CONFIRM:
-					return common.ERR_QUIT
+					return errs.ERR_QUIT
 				default:
 					panic(scene.CurrentQuitIdx)
 				}
