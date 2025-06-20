@@ -6,17 +6,14 @@
 
 set -euf -o pipefail
 
-deps() {
-	go get -tool github.com/dkorunic/betteralign/cmd/betteralign@latest
-	go get -tool go.uber.org/nilaway/cmd/nilaway@latest
-	go get -tool github.com/alexkohler/prealloc@latest
-	go get -tool github.com/nikolaydubina/smrcptr@latest
-	go get -tool github.com/mdempsky/unconvert@latest
-	go get -tool github.com/kisielk/errcheck@latest
-}
+ISWSL=false
+if grep -qi Microsoft /proc/version; then
+	ISWSL=true
+fi
 
 sc() {
 	local -; set -x;
+
 	go fmt ./...
 	go mod tidy
 	go vet ./...
@@ -31,7 +28,7 @@ sc() {
 	set +f
 	local gofiles=( cmd/*.go src/**/*.go )
 	for file in "${gofiles[@]}"; do
-		goimports -w -local -v "$file"
+		go tool goimports -w -local -v "$file"
 	done
 	set -f
 
@@ -62,10 +59,10 @@ runlinux() {
 
 run() {
 	local -; set -x;
-	if ! grep -qi Microsoft /proc/version; then
-		runlinux
-	else
+	if "${ISWSL}"; then
 		runwin
+	else
+		runlinux
 	fi
 }
 
