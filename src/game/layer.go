@@ -8,22 +8,23 @@ import (
 )
 
 type Layer struct {
+	Uniforms assets.ShaderUniforms
+
+	Canvas *ebiten.Image
+	DIO    *ebiten.DrawImageOptions
+	Shader *ebiten.Shader
+	DRSO   *ebiten.DrawRectShaderOptions
+
+	DTSO     *ebiten.DrawTrianglesShaderOptions
 	ID       string
-	Canvas   *ebiten.Image
-	Disabled bool
+	Vertices []ebiten.Vertex
+	Indices  []uint16
 
 	X        float64
 	Y        float64
 	ScaleX   float64
 	ScaleY   float64
-	DIO      *ebiten.DrawImageOptions
-	Shader   *ebiten.Shader
-	DRSO     *ebiten.DrawRectShaderOptions
-	Uniforms assets.ShaderUniforms
-
-	DTSO     *ebiten.DrawTrianglesShaderOptions
-	Vertices []ebiten.Vertex
-	Indices  []uint16
+	Disabled bool
 }
 
 func NewLayer(id string, width, height int) *Layer {

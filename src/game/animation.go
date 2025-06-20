@@ -11,9 +11,9 @@ import (
 )
 
 type Animation struct {
+	Name   string
 	Frames []*ebiten.Image
 	FPS    float64
-	Name   string
 }
 
 type AnimationPlayer struct {
@@ -22,10 +22,10 @@ type AnimationPlayer struct {
 	DIO               *ebiten.DrawImageOptions
 	DRSO              *ebiten.DrawRectShaderOptions
 	Animations        map[string]*Animation
-	Paused            bool
-	CurrentFrameIndex int
 	CurrentState      string
+	CurrentFrameIndex int
 	Tick              float64
+	Paused            bool
 }
 
 func NewAnimationPlayer(spriteSheet *ebiten.Image) *AnimationPlayer {
@@ -47,7 +47,7 @@ func (ap *AnimationPlayer) AddStateAnimation(
 ) *Animation {
 	subImages := []*ebiten.Image{}
 	frameRect := image.Rect(x, y, x+w, y+h)
-	for i := 0; i < frameCount; i++ {
+	for _ = range frameCount {
 		subImages = append(subImages, ap.SpriteSheet.SubImage(frameRect).(*ebiten.Image))
 		frameRect.Min.X += w
 		frameRect.Max.X += w

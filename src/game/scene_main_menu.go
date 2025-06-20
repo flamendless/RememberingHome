@@ -37,27 +37,27 @@ const (
 )
 
 type Main_Menu_Scene struct {
-	GameState            *Game_State
-	TimerSys             *ebitick.TimerSystem
+	GameState     *Game_State
+	TimerSys      *ebitick.TimerSystem
+	Routine       *routine.Routine
+	TextSubtitle  *Text
+	TextQuit      *Text
+	TextVersion   *Text
+	FaderSubtitle *effects.Fader
+	AnimDesk      *AnimationPlayer
+	AnimHallway   *AnimationPlayer
+	LayerColorize *Layer
+	LayerText     *Layer
+	// AnimTitle            *AnimationPlayer
 	CurrentStateName     string
-	Routine              *routine.Routine
-	TextSubtitle         *Text
-	TextQuit             *Text
-	TextVersion          *Text
-	FaderSubtitle        *effects.Fader
-	ShowMenuTexts        bool
-	ShowQuitSubMenuTexts bool
-	CanInteract          bool
-	AnimDesk             *AnimationPlayer
-	AnimHallway          *AnimationPlayer
 	TextsMenu            []*Text
 	TextsQuit            []*Text
 	CurrentIdx           int
 	CurrentQuitIdx       int
 	SelectedIdx          int
-	LayerColorize        *Layer
-	LayerText            *Layer
-	// AnimTitle            *AnimationPlayer
+	ShowMenuTexts        bool
+	ShowQuitSubMenuTexts bool
+	CanInteract          bool
 }
 
 func (scene *Main_Menu_Scene) GetName() string {

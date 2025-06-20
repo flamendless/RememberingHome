@@ -15,9 +15,9 @@ type Splash_Scene struct {
 	Routine          *routine.Routine
 	FlamLogoAnim     *AnimationPlayer
 	WitsAnim         *AnimationPlayer
+	CurrentStateName string
 	ShowWits         bool
 	FinishedWits     bool
-	CurrentStateName string
 }
 
 func (scene *Splash_Scene) GetName() string {

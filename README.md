@@ -7,7 +7,6 @@
 - Deps:
     - library upgrade
     - dependency upgrade
-- Toolings:
     - go tools
     - dev tools
 - Scripts:

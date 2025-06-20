@@ -80,7 +80,7 @@ func UpdateDebugOverlay(g *Game_State) {
 
 func DrawDebugOverlay(screen *ebiten.Image) {
 	if ShowTexts {
-		for i := 0; i < len(debugTexts); i++ {
+		for i := range debugTexts {
 			ebitenutil.DebugPrintAt(screen, debugTexts[i], 0, 16*i)
 		}
 	}

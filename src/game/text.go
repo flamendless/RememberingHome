@@ -10,8 +10,8 @@ type Text struct {
 	Face   *text.GoXFace
 	DO     *text.DrawOptions
 	Txt    string
-	Static bool
 	X, Y   float64
+	Static bool
 	Show   bool
 }
 
