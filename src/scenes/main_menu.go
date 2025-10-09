@@ -8,7 +8,6 @@ import (
 	"remembering-home/src/conf"
 	"remembering-home/src/context"
 	"remembering-home/src/debug"
-	"remembering-home/src/effects"
 	"remembering-home/src/errs"
 	"remembering-home/src/graphics"
 	"remembering-home/src/utils"
@@ -39,17 +38,18 @@ const (
 	SIZE_X         = float32(128.0)
 	GAP            = 64.0
 	BANNER_PADDING = 20.0
+	BANNER_HEIGHT  = 1.4
 )
 
 type Main_Menu_Scene struct {
-	Context       *context.GameContext
-	SceneManager  SceneManager
-	TimerSys      *ebitick.TimerSystem
-	Routine       *routine.Routine
-	TextSubtitle  *graphics.Text
-	TextQuit      *graphics.Text
-	TextVersion   *graphics.Text
-	FaderSubtitle *effects.Fader
+	Context      *context.GameContext
+	SceneManager SceneManager
+	TimerSys     *ebitick.TimerSystem
+	Routine      *routine.Routine
+	TextSubtitle *graphics.Text
+	TextQuit     *graphics.Text
+	TextVersion  *graphics.Text
+	// FaderSubtitle *effects.Fader
 	AnimDesk      *graphics.AnimationPlayer
 	AnimHallway   *graphics.AnimationPlayer
 	LayerColorize *graphics.Layer
@@ -125,8 +125,8 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 	txtSubtitle.SetAlign(text.AlignCenter, text.AlignCenter)
 	utils.SetColor(txtSubtitle.DO, 1, 1, 1, 1)
 	scene.TextSubtitle = txtSubtitle
-	scene.FaderSubtitle = effects.NewFader(0, 1, 1)
-	scene.FaderSubtitle.Stopped = true
+	// scene.FaderSubtitle = effects.NewFader(0, 1, 1)
+	// scene.FaderSubtitle.Stopped = true
 
 	versionText := graphics.NewText(&resFontJamboree18.Face, "version: "+conf.GAME_VERSION, true)
 	versionText.SetPos(conf.GAME_W-BASE_X*0.3, conf.GAME_H-versionText.Face.Metrics().HAscent)
@@ -212,14 +212,14 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 	scene.LayerText.Uniforms = &shaders.SilentHillRedShaderUniforms{
 		Time:           0,
 		BannerPos:      [2]float64{txt0.X - BANNER_PADDING, txt0.Y},
-		BannerSize:     [2]float64{scene.FixedBannerWidth, textH * 1.2},
+		BannerSize:     [2]float64{scene.FixedBannerWidth, textH * BANNER_HEIGHT},
 		BaseRedColor:   [4]float64{1.0, 0.2, 0.2, 1.0},
 		GlowIntensity:  1.0,
 		MetallicShine:  0.4,
 		EdgeDarkness:   0.3,
 		TextGlowRadius: 2.5,
-		NoiseScale:     0.5,
-		NoiseIntensity: 0.5,
+		NoiseScale:     0.2,
+		NoiseIntensity: 0.1,
 	}
 
 	if conf.DEV {
@@ -254,7 +254,7 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
 			scene.CurrentStateName = "title text animation"
 			if scene.SceneManager.IsFadeInFinished() {
-				scene.FaderSubtitle.Stopped = false
+				// scene.FaderSubtitle.Stopped = false
 				return routine.FlowNext
 			}
 			return routine.FlowIdle
@@ -264,13 +264,13 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 			inputHandler := scene.Context.InputHandler
 			if inputHandler.ActionIsJustPressed(context.ActionEnter) {
 				scene.CurrentStateName = "showing menu..."
-				scene.FaderSubtitle.Alpha = 0
-				scene.FaderSubtitle.Stopped = true
+				// scene.FaderSubtitle.Alpha = 0
+				// scene.FaderSubtitle.Stopped = true
 
 				scene.AnimDesk.SetStateReset("row1")
 				scene.AnimDesk.Update()
 
-				utils.DOReplaceAlpha(scene.TextSubtitle.DO, 1)
+				utils.DOReplaceAlpha(scene.TextSubtitle.DO, 0)
 
 				// scene.AnimTitle.SetStateReset("row1")
 				// utils.DIOReplaceAlpha(scene.AnimTitle.DIO, 1)
@@ -323,7 +323,7 @@ func (scene *Main_Menu_Scene) calculateFixedBannerWidth() {
 			quitMaxWidth = width
 		}
 	}
-	scene.FixedQuitBannerWidth = quitMaxWidth + BANNER_PADDING*2
+	scene.FixedQuitBannerWidth = quitMaxWidth + BANNER_PADDING*4
 
 	subtitleWidth := float64(len(scene.TextSubtitle.Txt)) * 15.0
 	scene.FixedSubtitleBannerWidth = subtitleWidth + BANNER_PADDING*3
@@ -351,9 +351,9 @@ func (scene *Main_Menu_Scene) Update() error {
 	scene.TimerSys.Update()
 	scene.Routine.Update()
 
-	scene.FaderSubtitle.Update()
-	cs := scene.FaderSubtitle.GetCS()
-	scene.TextSubtitle.DO.ColorScale = *cs
+	// scene.FaderSubtitle.Update()
+	// cs := scene.FaderSubtitle.GetCS()
+	// scene.TextSubtitle.DO.ColorScale = *cs
 
 	if scene.SceneManager.IsFading() {
 		return nil
@@ -397,11 +397,14 @@ func (scene *Main_Menu_Scene) Update() error {
 
 	if !scene.ShowMenuTexts && scene.TextSubtitle.GetAlpha() >= 0.9 {
 		scene.LayerText.Disabled = false
-		th := scene.TextSubtitle.Face.Metrics().HAscent
-		uniform.BannerPos[0] = float64(scene.TextSubtitle.X) - scene.FixedSubtitleBannerWidth/2
-		uniform.BannerPos[1] = float64(scene.TextSubtitle.Y - th/2 - 4)
-		uniform.BannerSize[0] = scene.FixedSubtitleBannerWidth
-		uniform.BannerSize[1] = float64(th) * 1.2
+		textH := scene.TextSubtitle.DO.LineSpacing
+		bannerHeight := float64(textH) * BANNER_HEIGHT
+
+		posX, posY, sizeX, sizeY := graphics.CalculateBannerPosition(scene.TextSubtitle, scene.FixedSubtitleBannerWidth, bannerHeight)
+		uniform.BannerPos[0] = posX
+		uniform.BannerPos[1] = posY
+		uniform.BannerSize[0] = sizeX
+		uniform.BannerSize[1] = sizeY
 	}
 
 	if scene.ShowMenuTexts {
@@ -433,11 +436,14 @@ func (scene *Main_Menu_Scene) Update() error {
 
 		scene.CurrentIdx = utils.ClampInt(scene.CurrentIdx, 0, len(scene.TextsMenu)-1)
 		curText := scene.TextsMenu[scene.CurrentIdx]
-		th := curText.Face.Metrics().HAscent
-		uniform.BannerPos[0] = float64(curText.X) - BANNER_PADDING*2
-		uniform.BannerPos[1] = float64(curText.Y)
-		uniform.BannerSize[0] = scene.FixedBannerWidth
-		uniform.BannerSize[1] = float64(th) * 1.2
+		textH := curText.DO.LineSpacing
+		bannerHeight := float64(textH) * BANNER_HEIGHT * 0.7
+
+		posX, posY, sizeX, sizeY := graphics.CalculateBannerPosition(curText, scene.FixedBannerWidth, bannerHeight)
+		uniform.BannerPos[0] = posX
+		uniform.BannerPos[1] = posY
+		uniform.BannerSize[0] = sizeX * 1.5
+		uniform.BannerSize[1] = sizeY
 	}
 
 	if !scene.ShowMenuTexts && scene.CurrentIdx == MENU_QUIT {
@@ -465,11 +471,14 @@ func (scene *Main_Menu_Scene) Update() error {
 		}
 
 		curText := scene.TextsQuit[scene.CurrentQuitIdx]
-		th := curText.Face.Metrics().HAscent
-		uniform.BannerPos[0] = float64(curText.X) - scene.FixedQuitBannerWidth/2
-		uniform.BannerPos[1] = float64(curText.Y) - curText.Face.Metrics().HAscent/1.5
-		uniform.BannerSize[0] = scene.FixedQuitBannerWidth
-		uniform.BannerSize[1] = float64(th) * 1.2
+		textH := curText.DO.LineSpacing
+		bannerHeight := float64(textH) * BANNER_HEIGHT
+
+		posX, posY, sizeX, sizeY := graphics.CalculateBannerPosition(curText, scene.FixedQuitBannerWidth, bannerHeight)
+		uniform.BannerPos[0] = posX
+		uniform.BannerPos[1] = posY
+		uniform.BannerSize[0] = sizeX
+		uniform.BannerSize[1] = sizeY
 	}
 
 	scene.LayerText.ApplyTransformation()

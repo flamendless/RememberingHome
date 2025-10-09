@@ -2,8 +2,8 @@
 
 //kage:unit pixels
 
-// Silent Hill style text highlight shader
-// Creates a red atmospheric glow effect around selected text
+// Silent Hill 2 Remake inspired main menu texts style text highlight shader
+// Creates a red atmospheric glow effect around selected text with dark spots and scrolling animation
 
 package main
 
@@ -18,9 +18,81 @@ var TextGlowRadius float
 var NoiseScale float
 var NoiseIntensity float
 
-// Simple noise function for subtle texture variation
 func noise(p vec2) float {
 	return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453)
+}
+
+func noise2(p vec2) float {
+	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453)
+}
+
+func smoothNoise(p vec2) float {
+	ix := floor(p.x)
+	iy := floor(p.y)
+	fx := fract(p.x)
+	fy := fract(p.y)
+
+	u := fx * fx * (3.0 - 2.0 * fx)
+	v := fy * fy * (3.0 - 2.0 * fy)
+
+	n00 := noise(vec2(ix, iy))
+	n01 := noise(vec2(ix, iy + 1.0))
+	n10 := noise(vec2(ix + 1.0, iy))
+	n11 := noise(vec2(ix + 1.0, iy + 1.0))
+
+	nx0 := mix(n00, n10, u)
+	nx1 := mix(n01, n11, u)
+
+	return mix(nx0, nx1, v)
+}
+
+func generateDarkSpots(pos vec2, time float) float {
+	// Create cell-like/virus movement with undetermined directions
+	// Use multiple time-based offsets for organic movement
+	offset1 := vec2(sin(time * 0.7), cos(time * 0.5)) * 15.0
+	offset2 := vec2(cos(time * 0.3), sin(time * 0.9)) * 12.0
+	offset3 := vec2(sin(time * 1.1), cos(time * 0.8)) * 18.0
+
+	// Combine offsets for complex movement patterns
+	cellMovement := offset1 + offset2 * 0.7 + offset3 * 0.5
+	scrolledPos := pos + cellMovement
+
+	// Create repeating pattern for seamless movement
+	repeatX := mod(scrolledPos.x, BannerSize.x)
+	repeatY := mod(scrolledPos.y, BannerSize.y)
+	patternPos := vec2(repeatX, repeatY)
+
+	// Create cell-like spots with organic shapes
+	// Add pulsing effect for virus-like behavior
+	pulse := 1.0 + sin(time * 2.0) * 0.3
+
+	// Large cell spots - organic movement (fewer spots)
+	largeScale := 0.06
+	largeNoise := smoothNoise(patternPos * largeScale)
+	largeSpots := step(0.85, largeNoise) * 1.2 * pulse
+
+	// Medium cell spots - different movement pattern (fewer spots)
+	mediumScale := 0.1
+	mediumNoise := smoothNoise(patternPos * mediumScale + vec2(time * 0.5, time * 0.3))
+	mediumSpots := step(0.9, mediumNoise) * 1.0 * pulse
+
+	// Small cell spots - rapid movement (fewer spots)
+	smallScale := 0.15
+	smallNoise := smoothNoise(patternPos * smallScale + vec2(time * 1.2, time * 0.8))
+	smallSpots := step(0.95, smallNoise) * 0.8 * pulse
+
+	// Combine all spot layers
+	spots := max(largeSpots, max(mediumSpots, smallSpots))
+
+	// Add organic variation with time-based noise
+	organicVariation := noise2(patternPos * 0.4 + vec2(time * 0.6, time * 0.4))
+	spots *= (0.7 + 0.5 * organicVariation)
+
+	// Add cell division-like behavior (spots splitting/merging) - reduced
+	divisionEffect := sin(time * 1.5 + patternPos.x * 0.1) * 0.1
+	spots += divisionEffect * 0.15
+
+	return spots
 }
 
 func Fragment(dest vec4, src vec2, col vec4) vec4 {
@@ -37,13 +109,28 @@ func Fragment(dest vec4, src vec2, col vec4) vec4 {
 		glow := 1.0 - smoothstep(0.0, maxDist, distFromCenter)
 		glow *= GlowIntensity
 
+		// Generate dark spots with scrolling animation
+		relativePos := vec2(dest.x - BannerPos.x, dest.y - BannerPos.y)
+		darkSpots := generateDarkSpots(relativePos, Time)
+
+		// Original noise for texture variation
 		noiseValue := noise(vec2(dest.x, dest.y) * NoiseScale) * NoiseIntensity
 
 		redEffect := BaseRedColor
 		redEffect.rgb *= glow
 		redEffect.rgb += noiseValue * 0.2
 
+		// Apply dark spots to create ink drop effect - visible throughout banner
+		darkness := darkSpots * EdgeDarkness * 1.5
+		// Apply darkness to both the red effect and the original color
+		redEffect.rgb *= (1.0 - darkness)
+		orig.rgb *= (1.0 - darkness * 0.8)
+
+		// Mix colors while preserving dark spots visibility
 		finalColor := mix(orig, orig + redEffect, 0.6)
+
+		// Ensure dark spots are visible by applying additional darkness
+		finalColor.rgb *= (1.0 - darkness * 0.3)
 
 		return finalColor
 	}

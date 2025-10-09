@@ -30,9 +30,7 @@ func UpdateDebugUI(sceneName, sceneState string) error {
 
 			// Debug controls
 			ctx.Header("Debug Controls", false, func() {
-				ctx.Button("Toggle Lines").On(func() {
-					ShowLines = !ShowLines
-				})
+				ctx.Checkbox(&ShowLines, "Show Lines")
 			})
 
 			AddShaderDebugControls(ctx)
@@ -98,8 +96,8 @@ func AddShaderDebugControls(ctx *debugui.Context) {
 					uniforms.MetallicShine = 0.4
 					uniforms.EdgeDarkness = 0.3
 					uniforms.TextGlowRadius = 2.5
-					uniforms.NoiseScale = 0.1
-					uniforms.NoiseIntensity = 0.5
+					uniforms.NoiseScale = 0.2
+					uniforms.NoiseIntensity = 0.1
 				})
 			})
 		} else {

@@ -60,3 +60,30 @@ func (txt *Text) Draw(screen *ebiten.Image) {
 
 	text.Draw(screen, txt.Txt, txt.Face, txt.DO)
 }
+
+func CalculateBannerPosition(textObj *Text, bannerWidth, bannerHeight float64) (posX, posY, sizeX, sizeY float64) {
+	textH := textObj.DO.LineSpacing
+
+	var bannerY float64
+	if textObj.DO.SecondaryAlign == text.AlignCenter {
+		bannerY = float64(textObj.Y) - bannerHeight/2
+	} else {
+		bannerY = float64(textObj.Y) - bannerHeight/2 + float64(textH)/2
+	}
+
+	var bannerX float64
+	switch textObj.DO.PrimaryAlign {
+	case text.AlignCenter:
+		bannerX = float64(textObj.X) - bannerWidth/2
+	case text.AlignEnd:
+		textWidth := float64(len(textObj.Txt)) * 20.0
+		textCenterX := float64(textObj.X) - textWidth/2
+		bannerX = textCenterX - bannerWidth/2
+	default:
+		textWidth := float64(len(textObj.Txt)) * 20.0
+		textCenterX := float64(textObj.X) + textWidth/2
+		bannerX = textCenterX - bannerWidth/2
+	}
+
+	return bannerX, bannerY, bannerWidth, bannerHeight
+}
