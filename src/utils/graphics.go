@@ -2,7 +2,7 @@ package utils
 
 import "github.com/hajimehoshi/ebiten/v2"
 
-//From https://github.com/Zyko0/Dest/blob/main/graphics%2Futils.go#L28
+// From https://github.com/Zyko0/Dest/blob/main/graphics%2Futils.go#L28
 
 var rectIndices = [6]uint16{0, 1, 2, 1, 2, 3}
 

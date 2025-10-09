@@ -28,7 +28,7 @@ func main() {
 	sceneManager.GoTo(game.NewMainMenuScene(gameState))
 
 	if err := ebiten.RunGame(gameState); err != nil {
-		if errors.Is(err, errs.ERR_QUIT) {
+		if errors.Is(err, errs.ErrQuit) {
 			logger.Log().Info("Successfully exited the game")
 			os.Exit(0)
 			return

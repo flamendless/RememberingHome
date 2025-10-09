@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"remembering-home/src/assets"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -67,7 +66,7 @@ func (layer *Layer) Render(screen *ebiten.Image) {
 
 func (layer *Layer) RenderWithShader(screen *ebiten.Image) {
 	if layer.Shader == nil {
-		panic(fmt.Sprintf("No shader was given to layer %s", layer.ID))
+		panic("No shader was given to layer " + layer.ID)
 	}
 
 	if layer.Disabled {

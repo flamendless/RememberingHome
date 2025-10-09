@@ -43,15 +43,16 @@ func FixWSLWindow() {
 }
 
 func UpdateDebugInput(g *Game_State) {
-	if g.InputHandlerDev.ActionIsJustReleased(DevToggleTexts) {
+	switch {
+	case g.InputHandlerDev.ActionIsJustReleased(DevToggleTexts):
 		ShowTexts = !ShowTexts
-	} else if g.InputHandlerDev.ActionIsJustReleased(DevToggleLines) {
+	case g.InputHandlerDev.ActionIsJustReleased(DevToggleLines):
 		ShowLines = !ShowLines
-	} else if g.InputHandlerDev.ActionIsJustReleased(DevGoToDummy) {
+	case g.InputHandlerDev.ActionIsJustReleased(DevGoToDummy):
 		g.SceneManager.GoTo(NewDummyScene(g))
-	} else if g.InputHandlerDev.ActionIsJustReleased(DevGoToSplash) {
+	case g.InputHandlerDev.ActionIsJustReleased(DevGoToSplash):
 		g.SceneManager.GoTo(NewSplashScene(g))
-	} else if g.InputHandlerDev.ActionIsJustReleased(DevGoToMainMenu) {
+	case g.InputHandlerDev.ActionIsJustReleased(DevGoToMainMenu):
 		g.SceneManager.GoTo(NewMainMenuScene(g))
 	}
 }
@@ -69,13 +70,10 @@ func UpdateDebugOverlay(g *Game_State) {
 		nextSceneName := g.SceneManager.next.GetName()
 		debugTexts[SCENE_NAME] = fmt.Sprintf("Scene: %s, Next: %s", sceneName, nextSceneName)
 	} else {
-		debugTexts[SCENE_NAME] = fmt.Sprintf("Scene: %s", sceneName)
+		debugTexts[SCENE_NAME] = "Scene: " + sceneName
 	}
 
-	debugTexts[SCENE_STATE] = fmt.Sprintf(
-		"Scene State: %s",
-		g.SceneManager.current.GetStateName(),
-	)
+	debugTexts[SCENE_STATE] = "Scene State: " + g.SceneManager.current.GetStateName()
 }
 
 func DrawDebugOverlay(screen *ebiten.Image) {

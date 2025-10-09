@@ -47,7 +47,7 @@ func (ap *AnimationPlayer) AddStateAnimation(
 ) *Animation {
 	subImages := []*ebiten.Image{}
 	frameRect := image.Rect(x, y, x+w, y+h)
-	for _ = range frameCount {
+	for range frameCount {
 		subImages = append(subImages, ap.SpriteSheet.SubImage(frameRect).(*ebiten.Image))
 		frameRect.Min.X += w
 		frameRect.Max.X += w
@@ -70,7 +70,7 @@ func (ap *AnimationPlayer) AddStateAnimation(
 
 	dataAnim, ok := ap.Animations[ap.CurrentState]
 	if !ok {
-		panic(errs.ERR_NIL_ELEM)
+		panic(errs.ErrNilElem)
 	}
 	ap.CurrentFrame = dataAnim.Frames[ap.CurrentFrameIndex]
 
@@ -94,7 +94,7 @@ func (ap *AnimationPlayer) State() string {
 func (ap *AnimationPlayer) CurrentStateFPS() float64 {
 	dataAnim, ok := ap.Animations[ap.State()]
 	if !ok {
-		panic(errs.ERR_NIL_ELEM)
+		panic(errs.ErrNilElem)
 	}
 	return dataAnim.FPS
 }
@@ -116,7 +116,7 @@ func (ap *AnimationPlayer) SetState(state string) {
 func (ap *AnimationPlayer) PauseAtFrame(frameIndex int) {
 	dataAnim, ok := ap.Animations[ap.State()]
 	if !ok {
-		panic(errs.ERR_NIL_ELEM)
+		panic(errs.ErrNilElem)
 	}
 
 	if frameIndex < len(dataAnim.Frames) && frameIndex >= 0 {
@@ -128,7 +128,7 @@ func (ap *AnimationPlayer) PauseAtFrame(frameIndex int) {
 func (ap *AnimationPlayer) GetLastFrameCount() int {
 	dataAnim, ok := ap.Animations[ap.CurrentState]
 	if !ok {
-		panic(errs.ERR_NIL_ELEM)
+		panic(errs.ErrNilElem)
 	}
 	return len(dataAnim.Frames) - 1
 }
@@ -140,7 +140,7 @@ func (ap *AnimationPlayer) IsInLastFrame() bool {
 func (ap *AnimationPlayer) Update() {
 	dataAnim, ok := ap.Animations[ap.CurrentState]
 	if !ok {
-		panic(errs.ERR_NIL_ELEM)
+		panic(errs.ErrNilElem)
 	}
 
 	if !ap.Paused {

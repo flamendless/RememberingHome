@@ -94,7 +94,7 @@ func NewMainMenuScene(gameState *Game_State) *Main_Menu_Scene {
 	resFontJamboree18 := gameState.Loader.LoadFont(assets.FontJamboree18)
 	keys := scene.GameState.InputHandler.ActionKeyNames(ActionEnter, input.KeyboardDevice)
 	if len(keys) == 0 {
-		panic(fmt.Errorf("No valid '%d' in action key names", ActionEnter))
+		panic(fmt.Errorf("no valid '%d' in action key names", ActionEnter))
 	}
 
 	// titleFrameW, titleFrameH := assets.SheetTitleFrameData.W, assets.SheetTitleFrameData.H
@@ -370,18 +370,19 @@ func (scene *Main_Menu_Scene) Update() error {
 	if scene.ShowMenuTexts {
 		if scene.CanInteract {
 			inputHandler := scene.GameState.InputHandler
-			if inputHandler.ActionIsJustReleased(ActionMoveUp) {
+			switch {
+			case inputHandler.ActionIsJustReleased(ActionMoveUp):
 				scene.CurrentIdx--
-			} else if inputHandler.ActionIsJustReleased(ActionMoveDown) {
+			case inputHandler.ActionIsJustReleased(ActionMoveDown):
 				scene.CurrentIdx++
-			} else if inputHandler.ActionIsJustReleased(ActionEnter) {
+			case inputHandler.ActionIsJustReleased(ActionEnter):
 				switch scene.CurrentIdx {
 				case MENU_START: //TODO: (Brandon) - go to game
 					scene.GameState.SceneManager.GoTo(NewIntroScene(scene.GameState))
 					return nil
 				case MENU_SETTINGS:
 					scene.SelectedIdx = MENU_SETTINGS
-					return errs.ERR_NOT_YET_IMPL
+					return errs.ErrNotYetImpl
 				case MENU_QUIT:
 					scene.ShowMenuTexts = false
 					scene.CurrentQuitIdx = MENU_QUIT_CANCEL
@@ -405,11 +406,12 @@ func (scene *Main_Menu_Scene) Update() error {
 	if !scene.ShowMenuTexts && scene.CurrentIdx == MENU_QUIT {
 		if scene.CanInteract {
 			inputHandler := scene.GameState.InputHandler
-			if inputHandler.ActionIsJustReleased(ActionMoveLeft) {
+			switch {
+			case inputHandler.ActionIsJustReleased(ActionMoveLeft):
 				scene.CurrentQuitIdx = MENU_QUIT_CANCEL
-			} else if inputHandler.ActionIsJustReleased(ActionMoveRight) {
+			case inputHandler.ActionIsJustReleased(ActionMoveRight):
 				scene.CurrentQuitIdx = MENU_QUIT_CONFIRM
-			} else if inputHandler.ActionIsJustReleased(ActionEnter) {
+			case inputHandler.ActionIsJustReleased(ActionEnter):
 				switch scene.CurrentQuitIdx {
 				case MENU_QUIT_CANCEL:
 					scene.ShowMenuTexts = true
@@ -418,7 +420,7 @@ func (scene *Main_Menu_Scene) Update() error {
 					scene.CurrentIdx = MENU_QUIT
 					return nil
 				case MENU_QUIT_CONFIRM:
-					return errs.ERR_QUIT
+					return errs.ErrQuit
 				default:
 					panic(scene.CurrentQuitIdx)
 				}
@@ -428,9 +430,10 @@ func (scene *Main_Menu_Scene) Update() error {
 		sizex := conf.GAME_W * 0.05
 		curText := scene.TextsQuit[scene.CurrentQuitIdx]
 		th := curText.Face.Metrics().HAscent
-		if curText.DO.PrimaryAlign == text.AlignEnd {
+		switch curText.DO.PrimaryAlign {
+		case text.AlignEnd:
 			uniform.Pos[0] = float32(curText.X) - float32(curText.Face.Metrics().HAscent)/2
-		} else if curText.DO.PrimaryAlign == text.AlignStart {
+		case text.AlignStart:
 			uniform.Pos[0] = float32(curText.X) + float32(curText.Face.Metrics().HAscent)/2
 		}
 		uniform.Pos[1] = float32(curText.Y) - float32(curText.Face.Metrics().HAscent)/1.5
