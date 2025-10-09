@@ -1,15 +1,15 @@
 module remembering-home
 
-go 1.24.3
+go 1.25.1
 
 require (
-	github.com/hajimehoshi/ebiten/v2 v2.8.8
+	github.com/hajimehoshi/ebiten/v2 v2.9.0
 	github.com/quasilyte/ebitengine-input v0.9.1
 	github.com/quasilyte/ebitengine-resource v0.5.0
 	github.com/solarlune/ebitick v0.0.0-20240504035334-82ae5db5b183
 	github.com/solarlune/routine v0.0.0-20240401160545-0fca8842c80e
 	go.uber.org/zap v1.27.0
-	golang.org/x/image v0.28.0
+	golang.org/x/image v0.32.0
 )
 
 require (
@@ -23,10 +23,10 @@ require (
 	github.com/coreos/go-semver v0.3.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/dkorunic/betteralign v0.7.1 // indirect
-	github.com/ebitengine/gomobile v0.0.0-20250329061421-6d0a8e981e4c // indirect
+	github.com/ebitengine/gomobile v0.0.0-20250923094054-ea854a63cce1 // indirect
 	github.com/ebitengine/hideconsole v1.0.0 // indirect
-	github.com/ebitengine/oto/v3 v3.3.3 // indirect
-	github.com/ebitengine/purego v0.8.4 // indirect
+	github.com/ebitengine/oto/v3 v3.4.0 // indirect
+	github.com/ebitengine/purego v0.9.0 // indirect
 	github.com/fatih/color v1.14.1 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/git-chglog/git-chglog v0.15.4 // indirect
@@ -53,7 +53,8 @@ require (
 	github.com/nikolaydubina/smrcptr v1.4.2 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/quasilyte/gmath v0.0.0-20250613024001-aae253dc7bd9 // indirect
+	github.com/quasilyte/gmath v0.0.0-20250817142619-e0a8c6ee09b3 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/sirkon/dst v0.26.4 // indirect
@@ -66,13 +67,13 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/nilaway v0.0.0-20250605234149-5098b501249e // indirect
 	golang.org/x/crypto v0.3.0 // indirect
-	golang.org/x/exp v0.0.0-20250606033433-dcc06ee1d476 // indirect
-	golang.org/x/mod v0.25.0 // indirect
-	golang.org/x/sync v0.15.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/exp v0.0.0-20251002181428-27f1f14c8bb9 // indirect
+	golang.org/x/mod v0.28.0 // indirect
+	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
 	golang.org/x/term v0.2.0 // indirect
-	golang.org/x/text v0.26.0 // indirect
-	golang.org/x/tools v0.34.0 // indirect
+	golang.org/x/text v0.30.0 // indirect
+	golang.org/x/tools v0.37.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
