@@ -6,8 +6,12 @@
 
 set -euf -o pipefail
 
+ISMAC=false
 ISWSL=false
-if grep -qi Microsoft /proc/version; then
+
+if [[ $(uname) == "Darwin" ]]; then
+	ISMAC=true
+elif grep -qi Microsoft /proc/version; then
 	ISWSL=true
 fi
 
@@ -18,23 +22,24 @@ sc() {
 	go mod tidy
 	go vet ./...
 
+	if [ -x "$(command -v golangci-lint)" ]; then
+		golangci-lint config verify
+		golangci-lint run
+	fi
+
 	go tool betteralign -apply ./...
 	go tool nilaway ./...
-	go tool prealloc ./...
 	go tool smrcptr ./...
 	go tool unconvert ./...
 	go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test ./...
 
 	set +f
-	local gofiles=( cmd/*.go src/**/*.go )
+	local gofiles
+	gofiles=( cmd/*.go src/**/*.go )
 	for file in "${gofiles[@]}"; do
 		go tool goimports -w -local -v "$file"
 	done
 	set -f
-
-	local PKGS
-	PKGS=$(go list ./... | tr "\n" " ")
-	go tool errcheck $PKGS
 
 	set +f
 	local GODIRS
@@ -55,6 +60,10 @@ runwin() {
 
 runlinux() {
 	GOOS=linux go run ./cmd/main.go --dev
+}
+
+runmac() {
+	go run ./cmd/main.go --dev
 }
 
 run() {
