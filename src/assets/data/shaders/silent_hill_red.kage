@@ -1,0 +1,52 @@
+//go:build ignore
+
+//kage:unit pixels
+
+// Silent Hill style text highlight shader
+// Creates a red atmospheric glow effect around selected text
+
+package main
+
+var Time float
+var BannerPos vec2
+var BannerSize vec2
+var BaseRedColor vec4
+var GlowIntensity float
+var MetallicShine float
+var EdgeDarkness float
+var TextGlowRadius float
+var NoiseScale float
+var NoiseIntensity float
+
+// Simple noise function for subtle texture variation
+func noise(p vec2) float {
+	return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453)
+}
+
+func Fragment(dest vec4, src vec2, col vec4) vec4 {
+	orig := imageSrc0At(src)
+
+	if dest.x >= BannerPos.x && dest.x <= BannerPos.x + BannerSize.x &&
+	   dest.y >= BannerPos.y && dest.y <= BannerPos.y + BannerSize.y {
+
+		centerX := BannerPos.x + BannerSize.x * 0.5
+		centerY := BannerPos.y + BannerSize.y * 0.5
+		distFromCenter := distance(vec2(dest.x, dest.y), vec2(centerX, centerY))
+		maxDist := length(BannerSize) * 0.5
+
+		glow := 1.0 - smoothstep(0.0, maxDist, distFromCenter)
+		glow *= GlowIntensity
+
+		noiseValue := noise(vec2(dest.x, dest.y) * NoiseScale) * NoiseIntensity
+
+		redEffect := BaseRedColor
+		redEffect.rgb *= glow
+		redEffect.rgb += noiseValue * 0.2
+
+		finalColor := mix(orig, orig + redEffect, 0.6)
+
+		return finalColor
+	}
+
+	return orig
+}

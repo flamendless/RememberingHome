@@ -6,6 +6,9 @@ import (
 	"remembering-home/src/assets"
 	"remembering-home/src/conf"
 	"remembering-home/src/context"
+	"remembering-home/src/debug"
+	"remembering-home/src/scenes"
+	"runtime"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	input "github.com/quasilyte/ebitengine-input"
@@ -14,12 +17,12 @@ import (
 
 type Game_State struct {
 	Context      *context.GameContext
-	SceneManager *Scene_Manager
+	SceneManager *scenes.Scene_Manager
 }
 
 func NewGame(
 	loader *resource.Loader,
-	sceneManager *Scene_Manager,
+	sceneManager *scenes.Scene_Manager,
 	inputSystem *input.System,
 ) *Game_State {
 	iconImg := loader.LoadImage(assets.ImageWindowIcon)
@@ -55,9 +58,20 @@ func (g *Game_State) Update() error {
 	g.Context.InputSystem.Update()
 
 	if conf.DEV {
-		FixWSLWindow()
-		UpdateDebugInput(g)
-		UpdateDebugOverlay(g)
+		debug.FixWSLWindow()
+
+		var sceneName, sceneState string
+		if currentScene := g.SceneManager.GetCurrentScene(); currentScene != nil {
+			sceneName = currentScene.GetName()
+			sceneState = currentScene.GetStateName()
+		} else {
+			sceneName = "None"
+			sceneState = "None"
+		}
+
+		if err := debug.UpdateDebugUI(sceneName, sceneState); err != nil {
+			return err
+		}
 	}
 
 	if !ebiten.IsFocused() {
@@ -68,13 +82,13 @@ func (g *Game_State) Update() error {
 }
 
 func (g *Game_State) Draw(screen *ebiten.Image) {
-	if !ebiten.IsFocused() {
+	if !ebiten.IsFocused() && runtime.GOARCH != "wasm" {
 		return
 	}
 
 	g.SceneManager.Draw(screen)
 
 	if conf.DEV {
-		DrawDebugOverlay(screen)
+		debug.DrawDebugOverlay(screen)
 	}
 }

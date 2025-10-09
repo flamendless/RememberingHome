@@ -1,21 +1,19 @@
-package game
+package scenes
 
 import (
 	"image"
 	"image/color"
 	"remembering-home/src/effects"
-	"remembering-home/src/scenes"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type Scene_Manager struct {
-	GameState *Game_State
-	current   scenes.Scene
-	next      scenes.Scene
-	fader     *effects.Fader
-	mask      *ebiten.Image
-	vertices  []ebiten.Vertex
+	current  Scene
+	next     Scene
+	fader    *effects.Fader
+	mask     *ebiten.Image
+	vertices []ebiten.Vertex
 }
 
 func NewSceneManager() *Scene_Manager {
@@ -73,7 +71,7 @@ func (s *Scene_Manager) Draw(screen *ebiten.Image) {
 	screen.DrawTriangles(s.vertices, []uint16{0, 1, 2, 1, 2, 3}, s.mask, nil)
 }
 
-func (s *Scene_Manager) GoTo(scene scenes.Scene) {
+func (s *Scene_Manager) GoTo(scene Scene) {
 	if s.current == nil {
 		s.fader.Dir = -1
 		s.current = scene
@@ -93,4 +91,17 @@ func (s *Scene_Manager) IsFadeOutFinished() bool {
 
 func (s *Scene_Manager) IsFading() bool {
 	return s.next != nil
+}
+
+// Debug methods for accessing internal state
+func (s *Scene_Manager) GetFader() *effects.Fader {
+	return s.fader
+}
+
+func (s *Scene_Manager) GetCurrentScene() Scene {
+	return s.current
+}
+
+func (s *Scene_Manager) GetNextScene() Scene {
+	return s.next
 }

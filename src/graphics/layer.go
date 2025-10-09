@@ -1,13 +1,13 @@
 package graphics
 
 import (
-	"remembering-home/src/assets"
+	"remembering-home/src/assets/shaders"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type Layer struct {
-	Uniforms assets.ShaderUniforms
+	Uniforms shaders.ShaderUniforms
 
 	Canvas *ebiten.Image
 	DIO    *ebiten.DrawImageOptions

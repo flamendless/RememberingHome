@@ -14,7 +14,7 @@ const (
 	FontJamboree46
 )
 
-func SetFontResources(loader *resource.Loader) {
+func setFontResources(loader *resource.Loader) {
 	logger.Log().Info("Setting font resources...")
 	fontResources := map[resource.FontID]resource.FontInfo{
 		FontJamboree18: {Path: "fonts/Jamboree.ttf", Size: 18},

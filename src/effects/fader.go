@@ -42,3 +42,11 @@ func (f *Fader) GetCS() *ebiten.ColorScale {
 	cs.ScaleAlpha(f.Alpha / f.MaxAlpha)
 	return &cs
 }
+
+func (f *Fader) GetAlpha() float32 {
+	return f.Alpha
+}
+
+func (f *Fader) GetDir() int {
+	return f.Dir
+}

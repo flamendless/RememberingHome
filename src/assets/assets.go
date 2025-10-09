@@ -24,9 +24,9 @@ func NewAssetsLoader() *resource.Loader {
 		return f
 	}
 
-	SetImageResources(loader)
-	SetFontResources(loader)
-	SetShaderResources(loader)
+	setImageResources(loader)
+	setFontResources(loader)
+	setShaderResources(loader)
 
 	return loader
 }

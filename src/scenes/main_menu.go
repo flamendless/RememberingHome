@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"math"
 	"remembering-home/src/assets"
+	"remembering-home/src/assets/shaders"
 	"remembering-home/src/conf"
 	"remembering-home/src/context"
+	"remembering-home/src/debug"
 	"remembering-home/src/effects"
 	"remembering-home/src/errs"
 	"remembering-home/src/graphics"
@@ -33,9 +35,10 @@ const (
 )
 
 const (
-	BASE_X = 32.0
-	SIZE_X = float32(128.0)
-	GAP    = 64.0
+	BASE_X         = 32.0
+	SIZE_X         = float32(128.0)
+	GAP            = 64.0
+	BANNER_PADDING = 20.0
 )
 
 type Main_Menu_Scene struct {
@@ -52,15 +55,18 @@ type Main_Menu_Scene struct {
 	LayerColorize *graphics.Layer
 	LayerText     *graphics.Layer
 	// AnimTitle            *graphics.AnimationPlayer
-	CurrentStateName     string
-	TextsMenu            []*graphics.Text
-	TextsQuit            []*graphics.Text
-	CurrentIdx           int
-	CurrentQuitIdx       int
-	SelectedIdx          int
-	ShowMenuTexts        bool
-	ShowQuitSubMenuTexts bool
-	CanInteract          bool
+	CurrentStateName         string
+	TextsMenu                []*graphics.Text
+	TextsQuit                []*graphics.Text
+	CurrentIdx               int
+	CurrentQuitIdx           int
+	SelectedIdx              int
+	ShowMenuTexts            bool
+	ShowQuitSubMenuTexts     bool
+	CanInteract              bool
+	FixedBannerWidth         float64
+	FixedQuitBannerWidth     float64
+	FixedSubtitleBannerWidth float64
 }
 
 func (scene *Main_Menu_Scene) GetName() string {
@@ -88,7 +94,7 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 			"texts layer",
 			conf.GAME_W,
 			conf.GAME_H,
-			ctx.Loader.LoadShader(assets.ShaderTextRedBG).Data,
+			ctx.Loader.LoadShader(assets.ShaderSilentHillRed).Data,
 		),
 	}
 
@@ -197,20 +203,27 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 		scene.TextsQuit = append(scene.TextsQuit, txtYes)
 	}
 
+	scene.calculateFixedBannerWidth()
+
 	txt0 := scene.TextsMenu[0]
 	textH := scene.TextsMenu[0].DO.LineSpacing
 	scene.LayerText.DTSO.Images[1] = ctx.Loader.LoadImage(assets.TexturePaper).Data
 	scene.LayerText.Disabled = true
-	scene.LayerText.Uniforms = &assets.MenuTextShaderUniforms{
-		Time:              0,
-		Pos:               [2]float32{float32(txt0.X), float32(txt0.Y)},
-		Size:              [2]float32{conf.GAME_W*0.1 + float32(len(txt0.Txt))*8, float32(textH)},
-		StartingAmplitude: 0.5,
-		StartingFreq:      1.0,
-		Shift:             0.0,
-		WhiteCutoff:       0.999,
-		Velocity:          [2]float32{-8.0, -32.0},
-		Color:             [4]float32{0.0, 1.0, 1.0, 1.0},
+	scene.LayerText.Uniforms = &shaders.SilentHillRedShaderUniforms{
+		Time:           0,
+		BannerPos:      [2]float64{txt0.X - BANNER_PADDING, txt0.Y},
+		BannerSize:     [2]float64{scene.FixedBannerWidth, textH * 1.2},
+		BaseRedColor:   [4]float64{1.0, 0.2, 0.2, 1.0},
+		GlowIntensity:  1.0,
+		MetallicShine:  0.4,
+		EdgeDarkness:   0.3,
+		TextGlowRadius: 2.5,
+		NoiseScale:     0.5,
+		NoiseIntensity: 0.5,
+	}
+
+	if conf.DEV {
+		debug.SetDebugShader(scene.LayerText.Uniforms)
 	}
 
 	vx, ix := utils.AppendRectVerticesIndices(
@@ -293,6 +306,29 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 	return &scene
 }
 
+func (scene *Main_Menu_Scene) calculateFixedBannerWidth() {
+	menuMaxWidth := float64(0)
+	for _, txt := range scene.TextsMenu {
+		width := float64(len(txt.Txt)) * 20.0
+		if width > menuMaxWidth {
+			menuMaxWidth = width
+		}
+	}
+	scene.FixedBannerWidth = menuMaxWidth + BANNER_PADDING*3
+
+	quitMaxWidth := float64(0)
+	for _, txt := range scene.TextsQuit {
+		width := float64(len(txt.Txt)) * 20.0
+		if width > quitMaxWidth {
+			quitMaxWidth = width
+		}
+	}
+	scene.FixedQuitBannerWidth = quitMaxWidth + BANNER_PADDING*2
+
+	subtitleWidth := float64(len(scene.TextSubtitle.Txt)) * 15.0
+	scene.FixedSubtitleBannerWidth = subtitleWidth + BANNER_PADDING*3
+}
+
 func (scene *Main_Menu_Scene) RandomFlicker() {
 	waitFor := utils.IntRandRange(3, 6)
 	scene.TimerSys.After(time.Second*time.Duration(waitFor), func() {
@@ -350,25 +386,22 @@ func (scene *Main_Menu_Scene) Update() error {
 	// 	scene.RandomTitleFrame()
 	// }
 
-	uniform, ok := scene.LayerText.Uniforms.(*assets.MenuTextShaderUniforms)
+	uniform, ok := scene.LayerText.Uniforms.(*shaders.SilentHillRedShaderUniforms)
 	if !ok {
 		panic("incorrect casting")
 	}
 	uniform.Time += 0.01
 	v := (math.Sin(uniform.Time) + 1) / 2
 	v = utils.ClampFloat64(v, 0.4, 0.6)
-	uniform.StartingAmplitude = float32(v)
-	const SPEED = 4
-	uniform.Velocity[0] = float32(math.Sin(uniform.Time) * SPEED)
-	uniform.Velocity[1] = float32(math.Cos(uniform.Time) * SPEED)
+	uniform.GlowIntensity = float64(v)
 
 	if !scene.ShowMenuTexts && scene.TextSubtitle.GetAlpha() >= 0.9 {
 		scene.LayerText.Disabled = false
 		th := scene.TextSubtitle.Face.Metrics().HAscent
-		uniform.Pos[0] = float32(scene.TextSubtitle.X)
-		uniform.Pos[1] = float32(scene.TextSubtitle.Y - th/2 - 4)
-		uniform.Size[0] = conf.GAME_W*0.1 + float32(len(scene.TextSubtitle.Txt))*1.5
-		uniform.Size[1] = float32(th) * 1.2
+		uniform.BannerPos[0] = float64(scene.TextSubtitle.X) - scene.FixedSubtitleBannerWidth/2
+		uniform.BannerPos[1] = float64(scene.TextSubtitle.Y - th/2 - 4)
+		uniform.BannerSize[0] = scene.FixedSubtitleBannerWidth
+		uniform.BannerSize[1] = float64(th) * 1.2
 	}
 
 	if scene.ShowMenuTexts {
@@ -401,10 +434,10 @@ func (scene *Main_Menu_Scene) Update() error {
 		scene.CurrentIdx = utils.ClampInt(scene.CurrentIdx, 0, len(scene.TextsMenu)-1)
 		curText := scene.TextsMenu[scene.CurrentIdx]
 		th := curText.Face.Metrics().HAscent
-		uniform.Pos[0] = BASE_X*0.3 + SIZE_X
-		uniform.Pos[1] = float32(curText.Y)
-		uniform.Size[0] = SIZE_X
-		uniform.Size[1] = float32(th) * 1.2
+		uniform.BannerPos[0] = float64(curText.X) - BANNER_PADDING*2
+		uniform.BannerPos[1] = float64(curText.Y)
+		uniform.BannerSize[0] = scene.FixedBannerWidth
+		uniform.BannerSize[1] = float64(th) * 1.2
 	}
 
 	if !scene.ShowMenuTexts && scene.CurrentIdx == MENU_QUIT {
@@ -431,18 +464,12 @@ func (scene *Main_Menu_Scene) Update() error {
 			}
 		}
 
-		sizex := conf.GAME_W * 0.05
 		curText := scene.TextsQuit[scene.CurrentQuitIdx]
 		th := curText.Face.Metrics().HAscent
-		switch curText.DO.PrimaryAlign {
-		case text.AlignEnd:
-			uniform.Pos[0] = float32(curText.X) - float32(curText.Face.Metrics().HAscent)/2
-		case text.AlignStart:
-			uniform.Pos[0] = float32(curText.X) + float32(curText.Face.Metrics().HAscent)/2
-		}
-		uniform.Pos[1] = float32(curText.Y) - float32(curText.Face.Metrics().HAscent)/1.5
-		uniform.Size[0] = float32(sizex)
-		uniform.Size[1] = float32(th) * 1.2
+		uniform.BannerPos[0] = float64(curText.X) - scene.FixedQuitBannerWidth/2
+		uniform.BannerPos[1] = float64(curText.Y) - curText.Face.Metrics().HAscent/1.5
+		uniform.BannerSize[0] = scene.FixedQuitBannerWidth
+		uniform.BannerSize[1] = float64(th) * 1.2
 	}
 
 	scene.LayerText.ApplyTransformation()
@@ -457,7 +484,7 @@ func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
 	canvas2 := scene.LayerText.Canvas
 	canvas2.Clear()
 
-	uniform, ok := scene.LayerText.Uniforms.(*assets.MenuTextShaderUniforms)
+	uniform, ok := scene.LayerText.Uniforms.(*shaders.SilentHillRedShaderUniforms)
 	if !ok {
 		panic("incorrect casting")
 	}

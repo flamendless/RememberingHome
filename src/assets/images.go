@@ -22,7 +22,7 @@ const (
 	TexturePaper
 )
 
-func SetImageResources(loader *resource.Loader) {
+func setImageResources(loader *resource.Loader) {
 	logger.Log().Info("Setting image resources...")
 	imageResources := map[resource.ImageID]resource.ImageInfo{
 		ImageDummy:      {Path: "dummy.png"},

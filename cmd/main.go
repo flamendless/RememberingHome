@@ -20,7 +20,7 @@ func main() {
 	loader := assets.NewAssetsLoader()
 
 	logger.Log().Info("Launching game...")
-	sceneManager := game.NewSceneManager()
+	sceneManager := scenes.NewSceneManager()
 	inputSystem := game.NewInputSystem()
 	gameState := game.NewGame(loader, sceneManager, inputSystem)
 
