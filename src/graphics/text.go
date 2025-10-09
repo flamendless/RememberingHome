@@ -1,4 +1,4 @@
-package game
+package graphics
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"

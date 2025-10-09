@@ -1,11 +1,14 @@
-package game
+package scenes
 
 import (
+	"remembering-home/src/context"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type Dummy_Scene struct {
-	GameState *Game_State
+	Context      *context.GameContext
+	SceneManager SceneManager
 }
 
 func (scene *Dummy_Scene) GetName() string {
@@ -16,9 +19,10 @@ func (scene *Dummy_Scene) GetStateName() string {
 	return ""
 }
 
-func NewDummyScene(gameState *Game_State) *Dummy_Scene {
+func NewDummyScene(ctx *context.GameContext, sceneManager SceneManager) *Dummy_Scene {
 	scene := Dummy_Scene{
-		GameState: gameState,
+		Context:      ctx,
+		SceneManager: sceneManager,
 	}
 	return &scene
 }

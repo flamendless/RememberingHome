@@ -5,6 +5,7 @@ import (
 	"image"
 	"remembering-home/src/assets"
 	"remembering-home/src/conf"
+	"remembering-home/src/context"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	input "github.com/quasilyte/ebitengine-input"
@@ -12,11 +13,8 @@ import (
 )
 
 type Game_State struct {
-	Loader          *resource.Loader
-	SceneManager    *Scene_Manager
-	InputSystem     *input.System
-	InputHandler    *input.Handler
-	InputHandlerDev *input.Handler
+	Context      *context.GameContext
+	SceneManager *Scene_Manager
 }
 
 func NewGame(
@@ -33,15 +31,17 @@ func NewGame(
 	ebiten.SetWindowSize(conf.WINDOW_W, conf.WINDOW_H)
 	ebiten.SetFullscreen(conf.FULLSCREEN)
 
-	gs := &Game_State{
-		Loader:       loader,
-		SceneManager: sceneManager,
-		InputSystem:  inputSystem,
-		InputHandler: NewInputHandler(inputSystem),
+	inputHandler := NewInputHandler(inputSystem)
+	var inputHandlerDev *input.Handler
+	if conf.DEV {
+		inputHandlerDev = NewInputHandlerDev(inputSystem)
 	}
 
-	if conf.DEV {
-		gs.InputHandlerDev = NewInputHandlerDev(inputSystem)
+	ctx := context.NewGameContext(loader, inputSystem, inputHandler, inputHandlerDev)
+
+	gs := &Game_State{
+		Context:      ctx,
+		SceneManager: sceneManager,
 	}
 
 	return gs
@@ -52,7 +52,7 @@ func (g *Game_State) Layout(outsideWidth, outsideHeight int) (screenWidth, scree
 }
 
 func (g *Game_State) Update() error {
-	g.InputSystem.Update()
+	g.Context.InputSystem.Update()
 
 	if conf.DEV {
 		FixWSLWindow()

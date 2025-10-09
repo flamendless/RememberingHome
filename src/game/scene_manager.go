@@ -4,21 +4,15 @@ import (
 	"image"
 	"image/color"
 	"remembering-home/src/effects"
+	"remembering-home/src/scenes"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type Scene interface {
-	GetName() string
-	GetStateName() string
-	Update() error
-	Draw(screen *ebiten.Image)
-}
-
 type Scene_Manager struct {
 	GameState *Game_State
-	current   Scene
-	next      Scene
+	current   scenes.Scene
+	next      scenes.Scene
 	fader     *effects.Fader
 	mask      *ebiten.Image
 	vertices  []ebiten.Vertex
@@ -79,7 +73,7 @@ func (s *Scene_Manager) Draw(screen *ebiten.Image) {
 	screen.DrawTriangles(s.vertices, []uint16{0, 1, 2, 1, 2, 3}, s.mask, nil)
 }
 
-func (s *Scene_Manager) GoTo(scene Scene) {
+func (s *Scene_Manager) GoTo(scene scenes.Scene) {
 	if s.current == nil {
 		s.fader.Dir = -1
 		s.current = scene

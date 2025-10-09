@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"image/color"
 	"remembering-home/src/conf"
+	"remembering-home/src/context"
+	"remembering-home/src/scenes"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -44,16 +46,16 @@ func FixWSLWindow() {
 
 func UpdateDebugInput(g *Game_State) {
 	switch {
-	case g.InputHandlerDev.ActionIsJustReleased(DevToggleTexts):
+	case g.Context.InputHandlerDev.ActionIsJustReleased(context.DevToggleTexts):
 		ShowTexts = !ShowTexts
-	case g.InputHandlerDev.ActionIsJustReleased(DevToggleLines):
+	case g.Context.InputHandlerDev.ActionIsJustReleased(context.DevToggleLines):
 		ShowLines = !ShowLines
-	case g.InputHandlerDev.ActionIsJustReleased(DevGoToDummy):
-		g.SceneManager.GoTo(NewDummyScene(g))
-	case g.InputHandlerDev.ActionIsJustReleased(DevGoToSplash):
-		g.SceneManager.GoTo(NewSplashScene(g))
-	case g.InputHandlerDev.ActionIsJustReleased(DevGoToMainMenu):
-		g.SceneManager.GoTo(NewMainMenuScene(g))
+	case g.Context.InputHandlerDev.ActionIsJustReleased(context.DevGoToDummy):
+		g.SceneManager.GoTo(scenes.NewDummyScene(g.Context, g.SceneManager))
+	case g.Context.InputHandlerDev.ActionIsJustReleased(context.DevGoToSplash):
+		g.SceneManager.GoTo(scenes.NewSplashScene(g.Context, g.SceneManager))
+	case g.Context.InputHandlerDev.ActionIsJustReleased(context.DevGoToMainMenu):
+		g.SceneManager.GoTo(scenes.NewMainMenuScene(g.Context, g.SceneManager))
 	}
 }
 

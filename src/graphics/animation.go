@@ -1,6 +1,4 @@
-//credit: https://github.com/setanarut/bulimia/blob/main/engine/animplayer.go
-
-package game
+package graphics
 
 import (
 	"image"

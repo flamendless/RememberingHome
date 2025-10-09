@@ -1,8 +1,10 @@
-package game
+package scenes
 
 import (
 	"remembering-home/src/assets"
 	"remembering-home/src/conf"
+	"remembering-home/src/context"
+	"remembering-home/src/graphics"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -11,10 +13,11 @@ import (
 )
 
 type Splash_Scene struct {
-	GameState        *Game_State
+	Context          *context.GameContext
+	SceneManager     SceneManager
 	Routine          *routine.Routine
-	FlamLogoAnim     *AnimationPlayer
-	WitsAnim         *AnimationPlayer
+	FlamLogoAnim     *graphics.AnimationPlayer
+	WitsAnim         *graphics.AnimationPlayer
 	CurrentStateName string
 	ShowWits         bool
 	FinishedWits     bool
@@ -28,14 +31,15 @@ func (scene *Splash_Scene) GetStateName() string {
 	return scene.CurrentStateName
 }
 
-func NewSplashScene(gameState *Game_State) *Splash_Scene {
+func NewSplashScene(ctx *context.GameContext, sceneManager SceneManager) *Splash_Scene {
 	scene := Splash_Scene{
-		GameState: gameState,
+		Context:      ctx,
+		SceneManager: sceneManager,
 	}
 
-	resFlamLogo := gameState.Loader.LoadImage(assets.ImageFlamLogo)
+	resFlamLogo := ctx.Loader.LoadImage(assets.ImageFlamLogo)
 	sizeFlamLogo := resFlamLogo.Data.Bounds()
-	scene.FlamLogoAnim = NewAnimationPlayer(resFlamLogo.Data)
+	scene.FlamLogoAnim = graphics.NewAnimationPlayer(resFlamLogo.Data)
 	scene.FlamLogoAnim.AddStateAnimation("static", 0, 0, sizeFlamLogo.Max.X, sizeFlamLogo.Max.Y, 1, false)
 
 	scaleFlamLogo := float64(min(conf.GAME_W*0.7/sizeFlamLogo.Max.X, conf.GAME_H*0.7/sizeFlamLogo.Max.Y))
@@ -45,9 +49,9 @@ func NewSplashScene(gameState *Game_State) *Splash_Scene {
 		conf.GAME_H/2-float64(sizeFlamLogo.Max.Y)*scaleFlamLogo/2,
 	)
 
-	resWits := gameState.Loader.LoadImage(assets.ImageSheetWits)
+	resWits := ctx.Loader.LoadImage(assets.ImageSheetWits)
 	witsFrameW, witsFrameH := assets.SheetWitsFrameData.W, assets.SheetWitsFrameData.H
-	scene.WitsAnim = NewAnimationPlayer(resWits.Data)
+	scene.WitsAnim = graphics.NewAnimationPlayer(resWits.Data)
 	scene.WitsAnim.AddStateAnimation("row1", 0, 0, witsFrameW, witsFrameH, assets.SheetWitsFrameData.MaxCols, false)
 	scene.WitsAnim.AddStateAnimation("row2", 0, 128, witsFrameW, witsFrameH, assets.SheetWitsFrameData.MaxCols, false)
 	scene.WitsAnim.AddStateAnimation("row3", 0, 256, witsFrameW, witsFrameH, assets.SheetWitsFrameData.MaxCols, false)
@@ -67,7 +71,7 @@ func NewSplashScene(gameState *Game_State) *Splash_Scene {
 		"splash scene",
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
 			scene.CurrentStateName = "flamendless logo fading in"
-			if scene.GameState.SceneManager.IsFadeInFinished() {
+			if scene.SceneManager.IsFadeInFinished() {
 				return routine.FlowNext
 			}
 			return routine.FlowIdle
@@ -89,7 +93,7 @@ func NewSplashScene(gameState *Game_State) *Splash_Scene {
 		actions.NewWait(time.Second/2),
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
 			scene.CurrentStateName = "wits fading out"
-			scene.GameState.SceneManager.GoTo(NewMainMenuScene(scene.GameState))
+			scene.SceneManager.GoTo(NewMainMenuScene(scene.Context, scene.SceneManager))
 			return routine.FlowIdle
 		}),
 	)

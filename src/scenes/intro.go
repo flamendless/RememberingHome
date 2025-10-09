@@ -1,11 +1,14 @@
-package game
+package scenes
 
 import (
+	"remembering-home/src/context"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type Intro_Scene struct {
-	GameState        *Game_State
+	Context          *context.GameContext
+	SceneManager     SceneManager
 	CurrentStateName string
 }
 
@@ -17,9 +20,10 @@ func (scene *Intro_Scene) GetStateName() string {
 	return scene.CurrentStateName
 }
 
-func NewIntroScene(gameState *Game_State) *Intro_Scene {
+func NewIntroScene(ctx *context.GameContext, sceneManager SceneManager) *Intro_Scene {
 	scene := Intro_Scene{
-		GameState: gameState,
+		Context:      ctx,
+		SceneManager: sceneManager,
 	}
 	return &scene
 }
