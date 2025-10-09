@@ -51,10 +51,6 @@ sc() {
 }
 
 runwin() {
-	# GOOS=windows \
-	# 	go build -o out/game.exe ./cmd/main.go \
-	# 	&& cp out/game.exe /mnt/c/Users/flame/game.exe \
-	# 	&& /mnt/c/Users/flame/game.exe --dev
 	GOOS=windows go run ./cmd/main.go --dev
 }
 
@@ -66,13 +62,24 @@ runmac() {
 	go run ./cmd/main.go --dev
 }
 
+runwasm() {
+	go run github.com/hajimehoshi/wasmserve@latest ./cmd/main.go --dev
+}
+
 run() {
 	local -; set -x;
 	if "${ISWSL}"; then
 		runwin
+	elif "${ISMAC}"; then
+		runmac
 	else
 		runlinux
 	fi
+}
+
+build() {
+	local -; set -x;
+	go build -o "main" ./cmd/main.go
 }
 
 if [ "$#" -eq 0 ]; then
