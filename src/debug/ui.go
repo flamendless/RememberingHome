@@ -79,6 +79,58 @@ func AddShaderDebugControls(ctx *debugui.Context) {
 					ctx.SliderF((*float64)(&uniforms.NoiseIntensity), 0.0, 1.0, 0.01, 2)
 				})
 
+				ctx.Header("Cell Movement", false, func() {
+					ctx.Text("Movement Speed 1:")
+					ctx.SliderF((*float64)(&uniforms.MovementSpeed1), 0.0, 3.0, 0.01, 2)
+					ctx.Text("Movement Speed 2:")
+					ctx.SliderF((*float64)(&uniforms.MovementSpeed2), 0.0, 3.0, 0.01, 2)
+					ctx.Text("Movement Speed 3:")
+					ctx.SliderF((*float64)(&uniforms.MovementSpeed3), 0.0, 3.0, 0.01, 2)
+					ctx.Text("Movement Range 1:")
+					ctx.SliderF((*float64)(&uniforms.MovementRange1), 0.0, 50.0, 0.1, 1)
+					ctx.Text("Movement Range 2:")
+					ctx.SliderF((*float64)(&uniforms.MovementRange2), 0.0, 50.0, 0.1, 1)
+					ctx.Text("Movement Range 3:")
+					ctx.SliderF((*float64)(&uniforms.MovementRange3), 0.0, 50.0, 0.1, 1)
+				})
+
+				ctx.Header("Spot Generation", false, func() {
+					ctx.Text("Large Spot Scale:")
+					ctx.SliderF((*float64)(&uniforms.LargeSpotScale), 0.01, 0.5, 0.001, 3)
+					ctx.Text("Medium Spot Scale:")
+					ctx.SliderF((*float64)(&uniforms.MediumSpotScale), 0.01, 0.5, 0.001, 3)
+					ctx.Text("Small Spot Scale:")
+					ctx.SliderF((*float64)(&uniforms.SmallSpotScale), 0.01, 0.5, 0.001, 3)
+					ctx.Text("Large Spot Threshold:")
+					ctx.SliderF((*float64)(&uniforms.LargeSpotThreshold), 0.0, 1.0, 0.01, 2)
+					ctx.Text("Small Spot Threshold:")
+					ctx.SliderF((*float64)(&uniforms.SmallSpotThreshold), 0.0, 1.0, 0.01, 2)
+					ctx.Text("Pulse Speed:")
+					ctx.SliderF((*float64)(&uniforms.PulseSpeed), 0.0, 5.0, 0.01, 2)
+					ctx.Text("Pulse Intensity:")
+					ctx.SliderF((*float64)(&uniforms.PulseIntensity), 0.0, 1.0, 0.01, 2)
+
+					currentState := uniforms.GetCurrentFadeState()
+					var stateText string
+					switch currentState {
+					case shaders.FadeStateVisible:
+						stateText = "Visible (can fade out)"
+					case shaders.FadeStateHidden:
+						stateText = "Hidden (can fade in)"
+					default:
+						stateText = "Unknown"
+					}
+					ctx.Text(fmt.Sprintf("Current State: %s", stateText))
+
+					ctx.Button("Trigger Fade In").On(func() {
+						uniforms.TriggerFadeIn(4.0)
+					})
+
+					ctx.Button("Trigger Fade Out").On(func() {
+						uniforms.TriggerFadeOut(4.0)
+					})
+				})
+
 				ctx.Header("Banner Properties", false, func() {
 					ctx.Text("Banner X:")
 					ctx.SliderF((*float64)(&uniforms.BannerPos[0]), 0.0, 800.0, 1.0, 0)
@@ -98,6 +150,21 @@ func AddShaderDebugControls(ctx *debugui.Context) {
 					uniforms.TextGlowRadius = 2.5
 					uniforms.NoiseScale = 0.2
 					uniforms.NoiseIntensity = 0.1
+					// Cell movement defaults
+					uniforms.MovementSpeed1 = 0.7
+					uniforms.MovementSpeed2 = 0.5
+					uniforms.MovementSpeed3 = 0.3
+					uniforms.MovementRange1 = 15.0
+					uniforms.MovementRange2 = 12.0
+					uniforms.MovementRange3 = 18.0
+					// Spot generation defaults
+					uniforms.LargeSpotScale = 0.06
+					uniforms.MediumSpotScale = 0.1
+					uniforms.SmallSpotScale = 0.15
+					uniforms.LargeSpotThreshold = 0.85
+					uniforms.SmallSpotThreshold = 0.95
+					uniforms.PulseSpeed = 2.0
+					uniforms.PulseIntensity = 0.3
 				})
 			})
 		} else {

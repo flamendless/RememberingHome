@@ -209,18 +209,11 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 	textH := scene.TextsMenu[0].DO.LineSpacing
 	scene.LayerText.DTSO.Images[1] = ctx.Loader.LoadImage(assets.TexturePaper).Data
 	scene.LayerText.Disabled = true
-	scene.LayerText.Uniforms = &shaders.SilentHillRedShaderUniforms{
-		Time:           0,
-		BannerPos:      [2]float64{txt0.X - BANNER_PADDING, txt0.Y},
-		BannerSize:     [2]float64{scene.FixedBannerWidth, textH * BANNER_HEIGHT},
-		BaseRedColor:   [4]float64{1.0, 0.2, 0.2, 1.0},
-		GlowIntensity:  1.0,
-		MetallicShine:  0.4,
-		EdgeDarkness:   0.3,
-		TextGlowRadius: 2.5,
-		NoiseScale:     0.2,
-		NoiseIntensity: 0.1,
-	}
+	scene.LayerText.Uniforms = shaders.NewSilentHillRedShaderUniforms(shaders.FadeStateHidden)
+
+	uniforms := scene.LayerText.Uniforms.(*shaders.SilentHillRedShaderUniforms)
+	uniforms.BannerPos = [2]float64{txt0.X - BANNER_PADDING, txt0.Y}
+	uniforms.BannerSize = [2]float64{scene.FixedBannerWidth, textH * BANNER_HEIGHT}
 
 	if conf.DEV {
 		debug.SetDebugShader(scene.LayerText.Uniforms)
@@ -392,8 +385,9 @@ func (scene *Main_Menu_Scene) Update() error {
 	}
 	uniform.Time += 0.01
 	v := (math.Sin(uniform.Time) + 1) / 2
-	v = utils.ClampFloat64(v, 0.4, 0.6)
+	v = v*0.5 + 1.0
 	uniform.GlowIntensity = float64(v)
+	uniform.Update()
 
 	if !scene.ShowMenuTexts && scene.TextSubtitle.GetAlpha() >= 0.9 {
 		scene.LayerText.Disabled = false

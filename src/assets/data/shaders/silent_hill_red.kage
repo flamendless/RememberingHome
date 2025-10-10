@@ -17,6 +17,24 @@ var EdgeDarkness float
 var TextGlowRadius float
 var NoiseScale float
 var NoiseIntensity float
+// Cell movement parameters
+var MovementSpeed1 float
+var MovementSpeed2 float
+var MovementSpeed3 float
+var MovementRange1 float
+var MovementRange2 float
+var MovementRange3 float
+// Spot generation parameters
+var LargeSpotScale float
+var MediumSpotScale float
+var SmallSpotScale float
+var LargeSpotThreshold float
+var SmallSpotThreshold float
+var PulseSpeed float
+var PulseIntensity float
+var FadeProgress float
+var FadeDirection float
+var InitialFadeState float
 
 func noise(p vec2) float {
 	return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453)
@@ -46,12 +64,40 @@ func smoothNoise(p vec2) float {
 	return mix(nx0, nx1, v)
 }
 
+func fadeIn(startValue float, endValue float, fadeProgress float) float {
+	return mix(startValue, endValue, fadeProgress)
+}
+
+func fadeOut(startValue float, endValue float, fadeProgress float) float {
+	return mix(startValue, endValue, 1.0 - fadeProgress)
+}
+
+func calculateFadeThreshold(fadeInStart float, fadeInEnd float, fadeOutStart float, fadeOutEnd float) float {
+	if FadeProgress > 0.0 {
+		// Currently fading - use fade progress and direction
+		if FadeDirection > 0.5 {
+			// Fading in: fadeInStart -> fadeInEnd
+			return mix(fadeInStart, fadeInEnd, FadeProgress)
+		} else {
+			// Fading out: fadeOutStart -> fadeOutEnd
+			return mix(fadeOutStart, fadeOutEnd, FadeProgress)
+		}
+	} else {
+		// Not fading - use initial state
+		if InitialFadeState == 0.0 { // FadeStateVisible
+			return fadeInEnd
+		} else { // FadeStateHidden
+			return fadeOutEnd
+		}
+	}
+}
+
 func generateDarkSpots(pos vec2, time float) float {
 	// Create cell-like/virus movement with undetermined directions
 	// Use multiple time-based offsets for organic movement
-	offset1 := vec2(sin(time * 0.7), cos(time * 0.5)) * 15.0
-	offset2 := vec2(cos(time * 0.3), sin(time * 0.9)) * 12.0
-	offset3 := vec2(sin(time * 1.1), cos(time * 0.8)) * 18.0
+	offset1 := vec2(sin(time * MovementSpeed1), cos(time * MovementSpeed2)) * MovementRange1
+	offset2 := vec2(cos(time * MovementSpeed3), sin(time * MovementSpeed1)) * MovementRange2
+	offset3 := vec2(sin(time * MovementSpeed2), cos(time * MovementSpeed3)) * MovementRange3
 
 	// Combine offsets for complex movement patterns
 	cellMovement := offset1 + offset2 * 0.7 + offset3 * 0.5
@@ -64,22 +110,23 @@ func generateDarkSpots(pos vec2, time float) float {
 
 	// Create cell-like spots with organic shapes
 	// Add pulsing effect for virus-like behavior
-	pulse := 1.0 + sin(time * 2.0) * 0.3
+	pulse := 1.0 + sin(time * PulseSpeed) * PulseIntensity
 
-	// Large cell spots - organic movement (fewer spots)
-	largeScale := 0.06
-	largeNoise := smoothNoise(patternPos * largeScale)
-	largeSpots := step(0.85, largeNoise) * 1.2 * pulse
+	largeFadeInThreshold := calculateFadeThreshold(0.0, LargeSpotThreshold, LargeSpotThreshold, 0.0)
+
+	largeNoise := smoothNoise(patternPos * LargeSpotScale)
+	largeSpots := step(largeFadeInThreshold, largeNoise) * 1.2 * pulse
 
 	// Medium cell spots - different movement pattern (fewer spots)
-	mediumScale := 0.1
-	mediumNoise := smoothNoise(patternPos * mediumScale + vec2(time * 0.5, time * 0.3))
-	mediumSpots := step(0.9, mediumNoise) * 1.0 * pulse
+	fadeInThreshold := calculateFadeThreshold(0.0, LargeSpotThreshold, LargeSpotThreshold, 0.0)
+
+	mediumNoise := smoothNoise(patternPos * MediumSpotScale + vec2(time * 0.5, time * 0.3))
+	mediumSpots := step(fadeInThreshold, mediumNoise) * 1.0 * pulse
 
 	// Small cell spots - rapid movement (fewer spots)
-	smallScale := 0.15
-	smallNoise := smoothNoise(patternPos * smallScale + vec2(time * 1.2, time * 0.8))
-	smallSpots := step(0.95, smallNoise) * 0.8 * pulse
+	fadeOutThreshold := calculateFadeThreshold(1.0, SmallSpotThreshold, SmallSpotThreshold, 1.0)
+	smallNoise := smoothNoise(patternPos * SmallSpotScale + vec2(time * 1.2, time * 0.8))
+	smallSpots := step(fadeOutThreshold, smallNoise) * 0.8 * pulse
 
 	// Combine all spot layers
 	spots := max(largeSpots, max(mediumSpots, smallSpots))
