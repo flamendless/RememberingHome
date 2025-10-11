@@ -17,6 +17,8 @@
 - Performance:
     - optimization
 - Feature
+- Enhancements:
+    - simple tweaks
 
 ## Licenses
 

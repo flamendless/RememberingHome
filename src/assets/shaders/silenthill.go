@@ -11,6 +11,8 @@ const (
 	FadeStateHidden                   // Fully hidden (faded out) - can only trigger fade in
 )
 
+type funcCallback func()
+
 type SilentHillRedShaderUniforms struct {
 	ID             string
 	Time           float64
@@ -46,10 +48,12 @@ type SilentHillRedShaderUniforms struct {
 	lastFadeTriggerTime float64
 	fadeCooldown        float64
 	// Fade animation state
-	isAnimating   bool
-	fadeStartTime float64
-	fadeDuration  float64
-	fadeDirection bool // true = fade in, false = fade out
+	isAnimating     bool
+	fadeStartTime   float64
+	fadeDuration    float64
+	fadeDirection   bool // true = fade in, false = fade out
+	fadeOutCallback funcCallback
+	fadeInCallback  funcCallback
 }
 
 func (shrsu *SilentHillRedShaderUniforms) ToShaders(dtso *ebiten.DrawTrianglesShaderOptions) {
@@ -88,37 +92,37 @@ func (shrsu *SilentHillRedShaderUniforms) ToShaders(dtso *ebiten.DrawTrianglesSh
 
 func NewSilentHillRedShaderUniforms(initialFadeState FadeState) *SilentHillRedShaderUniforms {
 	uniforms := &SilentHillRedShaderUniforms{
-		ID:             "SilentHillRed",
-		Time:           0,
-		BannerPos:      [2]float64{0, 0},
-		BannerSize:     [2]float64{100, 50},
-		BaseRedColor:   [4]float64{1.0, 0.2, 0.2, 1.0},
-		GlowIntensity:  1.0,
-		MetallicShine:  0.4,
-		EdgeDarkness:   0.3,
-		TextGlowRadius: 2.5,
-		NoiseScale:     0.2,
-		NoiseIntensity: 0.1,
-		MovementSpeed1: 0.7,
-		MovementSpeed2: 0.5,
-		MovementSpeed3: 0.3,
-		MovementRange1: 15.0,
-		MovementRange2: 12.0,
-		MovementRange3: 18.0,
-		LargeSpotScale:     0.06,
-		MediumSpotScale:    0.1,
-		SmallSpotScale:     0.15,
-		LargeSpotThreshold: 0.85,
-		SmallSpotThreshold: 0.95,
-		PulseSpeed:         2.0,
-		PulseIntensity:     0.3,
-		FadeProgress:       0.0,
+		ID:                  "SilentHillRed",
+		Time:                0,
+		BannerPos:           [2]float64{0, 0},
+		BannerSize:          [2]float64{100, 50},
+		BaseRedColor:        [4]float64{1.0, 0.2, 0.2, 1.0},
+		GlowIntensity:       1.0,
+		MetallicShine:       0.4,
+		EdgeDarkness:        0.3,
+		TextGlowRadius:      2.5,
+		NoiseScale:          0.2,
+		NoiseIntensity:      0.1,
+		MovementSpeed1:      0.7,
+		MovementSpeed2:      0.5,
+		MovementSpeed3:      0.3,
+		MovementRange1:      15.0,
+		MovementRange2:      12.0,
+		MovementRange3:      18.0,
+		LargeSpotScale:      0.06,
+		MediumSpotScale:     0.1,
+		SmallSpotScale:      0.15,
+		LargeSpotThreshold:  0.85,
+		SmallSpotThreshold:  0.95,
+		PulseSpeed:          2.0,
+		PulseIntensity:      0.3,
+		FadeProgress:        0.0,
 		fadeCooldown:        0.1,
 		lastFadeTriggerTime: -1.0,
-		isAnimating:   false,
-		fadeStartTime: 0.0,
-		fadeDuration:  0.0,
-		fadeDirection: false,
+		isAnimating:         false,
+		fadeStartTime:       0.0,
+		fadeDuration:        0.0,
+		fadeDirection:       false,
 	}
 
 	uniforms.currentFadeState = initialFadeState
@@ -144,6 +148,16 @@ func (shrsu *SilentHillRedShaderUniforms) TriggerFadeOut(duration float64) {
 	shrsu.currentFadeState = FadeStateHidden
 }
 
+func (shrsu *SilentHillRedShaderUniforms) TriggerFadeOutWithCallback(duration float64, cb funcCallback) {
+	shrsu.TriggerFadeOut(duration)
+	shrsu.fadeOutCallback = cb
+}
+
+func (shrsu *SilentHillRedShaderUniforms) TriggerFadeInWithCallback(duration float64, cb funcCallback) {
+	shrsu.TriggerFadeIn(duration)
+	shrsu.fadeInCallback = cb
+}
+
 func (shrsu *SilentHillRedShaderUniforms) TriggerFadeIn(duration float64) {
 	if shrsu.currentFadeState != FadeStateHidden {
 		return
@@ -165,11 +179,30 @@ func (shrsu *SilentHillRedShaderUniforms) GetCurrentFadeState() FadeState {
 	return shrsu.currentFadeState
 }
 
+func (shrsu *SilentHillRedShaderUniforms) IsAnimating() bool {
+	return shrsu.isAnimating
+}
+
 func (shrsu *SilentHillRedShaderUniforms) fadeDirectionToFloat() float64 {
 	if shrsu.fadeDirection {
 		return 1.0
 	}
 	return 0.0
+}
+
+func (shrsu *SilentHillRedShaderUniforms) GetTextAlpha() float32 {
+	if !shrsu.isAnimating {
+		if shrsu.currentFadeState == FadeStateVisible {
+			return 1.0
+		}
+		return 0.0
+	}
+
+	if shrsu.fadeDirection {
+		return float32(shrsu.FadeProgress)
+	} else {
+		return float32(1.0 - shrsu.FadeProgress)
+	}
 }
 
 // TODO: (Brandon) add Update to interface
@@ -182,6 +215,14 @@ func (shrsu *SilentHillRedShaderUniforms) Update() {
 	if elapsed >= shrsu.fadeDuration {
 		shrsu.FadeProgress = 1.0
 		shrsu.isAnimating = false
+
+		if !shrsu.fadeDirection && shrsu.fadeOutCallback != nil {
+			shrsu.fadeOutCallback()
+			shrsu.fadeOutCallback = nil
+		} else if shrsu.fadeDirection && shrsu.fadeInCallback != nil {
+			shrsu.fadeInCallback()
+			shrsu.fadeInCallback = nil
+		}
 	} else {
 		progress := elapsed / shrsu.fadeDuration
 		shrsu.FadeProgress = progress
