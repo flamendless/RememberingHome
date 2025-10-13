@@ -10,6 +10,7 @@ import (
 	"remembering-home/src/debug"
 	"remembering-home/src/errs"
 	"remembering-home/src/graphics"
+	"remembering-home/src/ui"
 	"remembering-home/src/utils"
 	"strconv"
 	"time"
@@ -42,32 +43,26 @@ const (
 )
 
 type Main_Menu_Scene struct {
-	Context      *context.GameContext
-	SceneManager SceneManager
-	TimerSys     *ebitick.TimerSystem
-	Routine      *routine.Routine
-	TextSubtitle *graphics.Text
-	TextQuit     *graphics.Text
-	TextVersion  *graphics.Text
+	Context        *context.GameContext
+	SceneManager   SceneManager
+	TimerSys       *ebitick.TimerSystem
+	Routine        *routine.Routine
+	BannerSubtitle *ui.BannerText
+	TextQuit       *graphics.Text
+	TextVersion    *graphics.Text
 	// FaderSubtitle *effects.Fader
 	AnimDesk      *graphics.AnimationPlayer
 	AnimHallway   *graphics.AnimationPlayer
 	LayerColorize *graphics.Layer
 	LayerText     *graphics.Layer
 	// AnimTitle            *graphics.AnimationPlayer
-	CurrentStateName         string
-	TextsMenu                []*graphics.Text
-	TextsQuit                []*graphics.Text
-	CurrentIdx               int
-	CurrentQuitIdx           int
-	SelectedIdx              int
-	ShowMenuTexts            bool
-	ShowQuitSubMenuTexts     bool
-	CanInteract              bool
-	ShowSubtitle             bool
-	FixedBannerWidth         float64
-	FixedQuitBannerWidth     float64
-	FixedSubtitleBannerWidth float64
+	CurrentStateName     string
+	MenuMain             *ui.TextList
+	MenuQuit             *ui.TextList
+	SelectedIdx          int
+	ShowMenuTexts        bool
+	ShowQuitSubMenuTexts bool
+	CanInteract          bool
 }
 
 func (scene *Main_Menu_Scene) GetName() string {
@@ -83,8 +78,6 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 		Context:      ctx,
 		SceneManager: sceneManager,
 		TimerSys:     ebitick.NewTimerSystem(),
-		TextsMenu:    make([]*graphics.Text, 0, 3),
-		TextsQuit:    make([]*graphics.Text, 0, 2),
 		LayerColorize: graphics.NewLayerWithShader(
 			"colorize layer",
 			conf.GAME_W,
@@ -125,7 +118,12 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 	txtSubtitle.SetPos(conf.GAME_W/2, conf.GAME_H-txtSubtitle.Face.Metrics().HAscent*2)
 	txtSubtitle.SetAlign(text.AlignCenter, text.AlignCenter)
 	utils.SetColor(txtSubtitle.DO, 1, 1, 1, 0)
-	scene.TextSubtitle = txtSubtitle
+	scene.BannerSubtitle = ui.NewBannerText(txtSubtitle, ui.BannerConfig{
+		Padding:          BANNER_PADDING,
+		HeightMultiplier: BANNER_HEIGHT,
+		AutoWidth:        true,
+	})
+	scene.BannerSubtitle.SetVisible(false)
 	// scene.FaderSubtitle = effects.NewFader(0, 1, 1)
 	// scene.FaderSubtitle.Stopped = true
 
@@ -167,14 +165,27 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 	baseY := conf.GAME_H/2 + float64(deskFrameH)*scaleDesk/2 + 8.0
 	resFontJamboree26 := ctx.Loader.LoadFont(assets.FontJamboree26)
 
+	scene.MenuMain = ui.NewTextList(ui.TextListConfig{
+		Layout:       ui.LayoutVertical,
+		BaseX:        BASE_X,
+		BaseY:        baseY,
+		Gap:          0,
+		Alignment:    text.AlignStart,
+		SecAlignment: text.AlignStart,
+		BannerConfig: ui.BannerConfig{
+			Padding:          BANNER_PADDING,
+			HeightMultiplier: BANNER_HEIGHT * 0.7,
+			AutoWidth:        true,
+		},
+	})
+
 	for _, txt := range []string{"Start", "Settings", "Quit"} {
 		txtMenu := graphics.NewText(&resFontJamboree26.Face, txt, true)
-		txtMenu.SetPos(BASE_X, baseY)
-		txtMenu.SetAlign(text.AlignStart, text.AlignStart)
 		utils.SetColor(txtMenu.DO, 1, 1, 1, 1)
-		scene.TextsMenu = append(scene.TextsMenu, txtMenu)
-		baseY += txtMenu.DO.LineSpacing
+		scene.MenuMain.AddText(txtMenu)
 	}
+
+	scene.MenuMain.SetBannerWidth(scene.MenuMain.GetBannerWidth() * 1.5)
 
 	txtQuit := graphics.NewText(&resFontJamboree18.Face, "Are you sure you want to quit?", true)
 	txtQuit.SetPos(conf.GAME_W/2, conf.GAME_H-txtQuit.Face.Metrics().HAscent*4)
@@ -182,39 +193,40 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 	utils.SetColor(txtQuit.DO, 1, 1, 1, 1)
 	scene.TextQuit = txtQuit
 
-	{
-		txtNo := graphics.NewText(&resFontJamboree26.Face, "No", true)
-		txtNo.SetPos(
-			float64(conf.GAME_W/2)-GAP,
-			conf.GAME_H-txtNo.Face.Metrics().HAscent,
-		)
-		txtNo.SetAlign(text.AlignEnd, text.AlignCenter)
-		utils.SetColor(txtNo.DO, 1, 1, 1, 1)
-		scene.TextsQuit = append(scene.TextsQuit, txtNo)
-	}
+	firstMenuText := scene.MenuMain.Texts[0]
+	quitBaseY := conf.GAME_H - firstMenuText.Face.Metrics().HAscent
+	scene.MenuQuit = ui.NewTextList(ui.TextListConfig{
+		Layout:       ui.LayoutHorizontal,
+		BaseX:        float64(conf.GAME_W/2) - GAP,
+		BaseY:        quitBaseY,
+		Gap:          GAP * 2,
+		Alignment:    text.AlignEnd,
+		SecAlignment: text.AlignCenter,
+		BannerConfig: ui.BannerConfig{
+			Padding:          BANNER_PADDING,
+			HeightMultiplier: BANNER_HEIGHT,
+			AutoWidth:        true,
+		},
+	})
 
-	{
-		txtYes := graphics.NewText(&resFontJamboree26.Face, "Yes", true)
-		txtYes.SetPos(
-			float64(conf.GAME_W/2)+GAP,
-			conf.GAME_H-txtYes.Face.Metrics().HAscent,
-		)
-		txtYes.SetAlign(text.AlignStart, text.AlignCenter)
-		utils.SetColor(txtYes.DO, 1, 1, 1, 1)
-		scene.TextsQuit = append(scene.TextsQuit, txtYes)
-	}
+	txtNo := graphics.NewText(&resFontJamboree26.Face, "No", true)
+	utils.SetColor(txtNo.DO, 1, 1, 1, 1)
+	scene.MenuQuit.AddText(txtNo)
 
-	scene.calculateFixedBannerWidth()
+	txtYes := graphics.NewText(&resFontJamboree26.Face, "Yes", true)
+	txtYes.SetAlign(text.AlignStart, text.AlignCenter)
+	utils.SetColor(txtYes.DO, 1, 1, 1, 1)
+	scene.MenuQuit.AddText(txtYes)
 
-	txt0 := scene.TextsMenu[0]
-	textH := scene.TextsMenu[0].DO.LineSpacing
+	scene.MenuQuit.SetVisible(false)
+	scene.MenuQuit.SetEnabled(false)
+
 	scene.LayerText.DTSO.Images[1] = ctx.Loader.LoadImage(assets.TexturePaper).Data
 	scene.LayerText.Disabled = false
 	scene.LayerText.Uniforms = shaders.NewSilentHillRedShaderUniforms(shaders.FadeStateHidden)
 
 	uniforms := scene.LayerText.Uniforms.(*shaders.SilentHillRedShaderUniforms)
-	uniforms.BannerPos = [2]float64{txt0.X - BANNER_PADDING, txt0.Y}
-	uniforms.BannerSize = [2]float64{scene.FixedBannerWidth, textH * BANNER_HEIGHT}
+	scene.BannerSubtitle.UpdateBannerPositionForce(uniforms)
 
 	if conf.DEV {
 		debug.SetDebugShader(scene.LayerText.Uniforms)
@@ -253,7 +265,7 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 		actions.NewFunction(func(block *routine.Block) routine.Flow {
 			scene.CurrentStateName = "title text animation"
 			uniform.TriggerFadeInWithCallback(2, func() {
-				scene.ShowSubtitle = true
+				scene.BannerSubtitle.SetVisible(true)
 			})
 			if scene.SceneManager.IsFadeInFinished() {
 				return routine.FlowNext
@@ -268,7 +280,7 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 				scene.CurrentStateName = "showing menu..."
 				scene.AnimDesk.SetStateReset("row1")
 				scene.AnimDesk.Update()
-				utils.DOReplaceAlpha(scene.TextSubtitle.DO, 0)
+				scene.BannerSubtitle.SetVisible(false)
 				// scene.AnimTitle.SetStateReset("row1")
 				// utils.DIOReplaceAlpha(scene.AnimTitle.DIO, 1)
 				// scene.AnimTitle.Update()
@@ -299,29 +311,6 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 	)
 	scene.Routine.Run()
 	return &scene
-}
-
-func (scene *Main_Menu_Scene) calculateFixedBannerWidth() {
-	menuMaxWidth := float64(0)
-	for _, txt := range scene.TextsMenu {
-		width := float64(len(txt.Txt)) * 20.0
-		if width > menuMaxWidth {
-			menuMaxWidth = width
-		}
-	}
-	scene.FixedBannerWidth = menuMaxWidth + BANNER_PADDING*3
-
-	quitMaxWidth := float64(0)
-	for _, txt := range scene.TextsQuit {
-		width := float64(len(txt.Txt)) * 20.0
-		if width > quitMaxWidth {
-			quitMaxWidth = width
-		}
-	}
-	scene.FixedQuitBannerWidth = quitMaxWidth + BANNER_PADDING*4
-
-	subtitleWidth := float64(len(scene.TextSubtitle.Txt)) * 15.0
-	scene.FixedSubtitleBannerWidth = subtitleWidth + BANNER_PADDING*3
 }
 
 func (scene *Main_Menu_Scene) RandomFlicker() {
@@ -393,47 +382,22 @@ func (scene *Main_Menu_Scene) Update() error {
 
 	textAlpha := uniform.GetTextAlpha()
 
-	if !scene.ShowMenuTexts {
-		if scene.ShowSubtitle {
-			utils.DOReplaceAlpha(scene.TextSubtitle.DO, textAlpha)
-		} else {
-			utils.DOReplaceAlpha(scene.TextSubtitle.DO, 0)
-		}
-	} else {
-		utils.DOReplaceAlpha(scene.TextSubtitle.DO, 0)
-	}
-
-	// Apply shader alpha to menu texts
-	for _, txt := range scene.TextsMenu {
-		utils.DOReplaceAlpha(txt.DO, textAlpha)
-	}
+	scene.BannerSubtitle.ApplyShaderAlpha(uniform)
+	scene.MenuMain.ApplyShaderAlpha(uniform)
+	scene.MenuQuit.ApplyShaderAlpha(uniform)
 	utils.DOReplaceAlpha(scene.TextQuit.DO, textAlpha)
-	for _, txt := range scene.TextsQuit {
-		utils.DOReplaceAlpha(txt.DO, textAlpha)
-	}
 	utils.DOReplaceAlpha(scene.TextVersion.DO, textAlpha)
 
 	if !scene.ShowMenuTexts {
-		textH := scene.TextSubtitle.DO.LineSpacing
-		bannerHeight := float64(textH) * BANNER_HEIGHT
-
-		posX, posY, sizeX, sizeY := graphics.CalculateBannerPosition(scene.TextSubtitle, scene.FixedSubtitleBannerWidth, bannerHeight)
-		uniform.BannerPos[0] = posX
-		uniform.BannerPos[1] = posY
-		uniform.BannerSize[0] = sizeX
-		uniform.BannerSize[1] = sizeY
+		scene.BannerSubtitle.UpdateBannerPosition(uniform)
 	}
 
 	if scene.ShowMenuTexts {
 		if scene.CanInteract {
-			inputHandler := scene.Context.InputHandler
-			switch {
-			case inputHandler.ActionIsJustReleased(context.ActionMoveUp):
-				scene.CurrentIdx--
-			case inputHandler.ActionIsJustReleased(context.ActionMoveDown):
-				scene.CurrentIdx++
-			case inputHandler.ActionIsJustReleased(context.ActionEnter):
-				switch scene.CurrentIdx {
+			scene.MenuMain.Update(scene.Context.InputHandler)
+
+			if scene.MenuMain.IsConfirmed() {
+				switch scene.MenuMain.GetSelectedIndex() {
 				case MENU_START: //TODO: (Brandon) - go to game
 					uniform.TriggerFadeOutWithCallback(2, func() {
 						scene.SceneManager.GoTo(NewIntroScene(scene.Context, scene.SceneManager))
@@ -444,62 +408,52 @@ func (scene *Main_Menu_Scene) Update() error {
 					return errs.ErrNotYetImpl
 				case MENU_QUIT:
 					scene.ShowMenuTexts = false
-					scene.CurrentQuitIdx = MENU_QUIT_CANCEL
+					scene.MenuQuit.SetCurrentIndex(MENU_QUIT_CANCEL)
+					scene.MenuQuit.SetVisible(true)
+					scene.MenuQuit.SetEnabled(true)
 					scene.SelectedIdx = MENU_QUIT
 					return nil
 				default:
-					panic(scene.CurrentIdx)
+					panic(scene.MenuMain.GetSelectedIndex())
 				}
 			}
 		}
 
-		scene.CurrentIdx = utils.ClampInt(scene.CurrentIdx, 0, len(scene.TextsMenu)-1)
-		curText := scene.TextsMenu[scene.CurrentIdx]
+		curText := scene.MenuMain.GetSelectedText()
 		textH := curText.DO.LineSpacing
 		bannerHeight := float64(textH) * BANNER_HEIGHT * 0.7
 
-		_, posY, _, sizeY := graphics.CalculateBannerPosition(curText, scene.FixedBannerWidth, bannerHeight)
+		_, posY, _, sizeY := graphics.CalculateBannerPosition(curText, scene.MenuMain.GetBannerWidth(), bannerHeight)
 		fixedPosX := BASE_X - BANNER_PADDING*3
 
 		uniform.BannerPos[0] = fixedPosX
 		uniform.BannerPos[1] = posY
-		uniform.BannerSize[0] = scene.FixedBannerWidth * 1.5
+		uniform.BannerSize[0] = scene.MenuMain.GetBannerWidth()
 		uniform.BannerSize[1] = sizeY
 	}
 
-	if !scene.ShowMenuTexts && scene.CurrentIdx == MENU_QUIT {
+	if !scene.ShowMenuTexts && scene.SelectedIdx == MENU_QUIT {
 		if scene.CanInteract {
-			inputHandler := scene.Context.InputHandler
-			switch {
-			case inputHandler.ActionIsJustReleased(context.ActionMoveLeft):
-				scene.CurrentQuitIdx = MENU_QUIT_CANCEL
-			case inputHandler.ActionIsJustReleased(context.ActionMoveRight):
-				scene.CurrentQuitIdx = MENU_QUIT_CONFIRM
-			case inputHandler.ActionIsJustReleased(context.ActionEnter):
-				switch scene.CurrentQuitIdx {
+			scene.MenuQuit.Update(scene.Context.InputHandler)
+
+			if scene.MenuQuit.IsConfirmed() {
+				switch scene.MenuQuit.GetSelectedIndex() {
 				case MENU_QUIT_CANCEL:
 					scene.ShowMenuTexts = true
-					scene.CurrentQuitIdx = MENU_QUIT_CANCEL
+					scene.MenuQuit.SetVisible(false)
+					scene.MenuQuit.SetEnabled(false)
 					scene.SelectedIdx = 0
-					scene.CurrentIdx = MENU_QUIT
+					scene.MenuMain.SetCurrentIndex(MENU_QUIT)
 					return nil
 				case MENU_QUIT_CONFIRM:
 					return errs.ErrQuit
 				default:
-					panic(scene.CurrentQuitIdx)
+					panic(scene.MenuQuit.GetSelectedIndex())
 				}
 			}
 		}
 
-		curText := scene.TextsQuit[scene.CurrentQuitIdx]
-		textH := curText.DO.LineSpacing
-		bannerHeight := float64(textH) * BANNER_HEIGHT
-
-		posX, posY, sizeX, sizeY := graphics.CalculateBannerPosition(curText, scene.FixedQuitBannerWidth, bannerHeight)
-		uniform.BannerPos[0] = posX
-		uniform.BannerPos[1] = posY
-		uniform.BannerSize[0] = sizeX
-		uniform.BannerSize[1] = sizeY
+		scene.MenuQuit.UpdateBannerPosition(uniform)
 	}
 
 	scene.LayerText.ApplyTransformation()
@@ -527,19 +481,15 @@ func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
 	case MENU_QUIT:
 		canvas.DrawImage(scene.AnimDesk.CurrentFrame, scene.AnimDesk.DIO)
 		// canvas.DrawImage(scene.AnimTitle.CurrentFrame, scene.AnimTitle.DIO)
-		for _, txt := range scene.TextsQuit {
-			txt.Draw(canvas2)
-		}
+		scene.MenuQuit.Draw(canvas2)
 		scene.TextQuit.Draw(canvas2)
 	default:
 		canvas.DrawImage(scene.AnimDesk.CurrentFrame, scene.AnimDesk.DIO)
 		// canvas.DrawImage(scene.AnimTitle.CurrentFrame, scene.AnimTitle.DIO)
-		scene.TextSubtitle.Draw(canvas2)
+		scene.BannerSubtitle.Draw(canvas2)
 		if scene.ShowMenuTexts {
 			scene.TextVersion.Draw(canvas)
-			for _, txt := range scene.TextsMenu {
-				txt.Draw(canvas2)
-			}
+			scene.MenuMain.Draw(canvas2)
 		}
 	}
 
