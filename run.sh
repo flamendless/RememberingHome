@@ -63,6 +63,20 @@ runmac() {
 }
 
 runwasm() {
+	local pid
+	pid=$(lsof -ti:8080 2>/dev/null || true)
+
+	if [ -n "$pid" ]; then
+		local proc_name
+		proc_name=$(ps -p "$pid" -o command= 2>/dev/null || true)
+
+		if [[ "$proc_name" == *"wasmserve"* ]]; then
+			echo "Killing existing wasmserve process (PID: $pid)..."
+			kill "$pid"
+			sleep 1
+		fi
+	fi
+
 	go run github.com/hajimehoshi/wasmserve@latest ./cmd/main.go --dev
 }
 
