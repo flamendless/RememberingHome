@@ -43,19 +43,18 @@ const (
 )
 
 type Main_Menu_Scene struct {
-	Context        *context.GameContext
-	SceneManager   SceneManager
-	TimerSys       *ebitick.TimerSystem
-	Routine        *routine.Routine
-	BannerSubtitle *ui.BannerText
-	TextQuit       *graphics.Text
-	TextVersion    *graphics.Text
-	// FaderSubtitle *effects.Fader
-	AnimDesk      *graphics.AnimationPlayer
-	AnimHallway   *graphics.AnimationPlayer
-	LayerColorize *graphics.Layer
-	LayerText     *graphics.Layer
-	// AnimTitle            *graphics.AnimationPlayer
+	Context              *context.GameContext
+	SceneManager         SceneManager
+	TimerSys             *ebitick.TimerSystem
+	Routine              *routine.Routine
+	BannerSubtitle       *ui.BannerText
+	TextQuit             *graphics.Text
+	TextVersion          *graphics.Text
+	AnimDesk             *graphics.AnimationPlayer
+	AnimHallway          *graphics.AnimationPlayer
+	LayerColorize        *graphics.Layer
+	LayerText            *graphics.Layer
+	AnimTitle            *graphics.AnimationPlayer
 	CurrentStateName     string
 	MenuMain             *ui.TextList
 	MenuQuit             *ui.TextList
@@ -63,6 +62,7 @@ type Main_Menu_Scene struct {
 	ShowMenuTexts        bool
 	ShowQuitSubMenuTexts bool
 	CanInteract          bool
+	TitleGlitchCooldown  bool
 }
 
 func (scene *Main_Menu_Scene) GetName() string {
@@ -101,18 +101,18 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 		panic(fmt.Errorf("no valid '%d' in action key names", context.ActionEnter))
 	}
 
-	// titleFrameW, titleFrameH := assets.SheetTitleFrameData.W, assets.SheetTitleFrameData.H
-	// scaleTitle := float64(min(conf.GAME_W/titleFrameW, conf.GAME_H/titleFrameH)) * 0.5
-	// scene.AnimTitle = graphics.NewAnimationPlayer(ctx.Loader.LoadImage(assets.ImageSheetTitle).Data)
-	// scene.AnimTitle.AddStateAnimation("row1", 0, 0, titleFrameW, titleFrameH, assets.SheetTitleFrameData.MaxCols, false)
-	// scene.AnimTitle.SetFPS(0)
-	// utils.DIOReplaceAlpha(scene.AnimTitle.DIO, 0)
-	// scene.AnimTitle.Update()
-	// scene.AnimTitle.DIO.GeoM.Scale(scaleTitle, scaleTitle)
-	// scene.AnimTitle.DIO.GeoM.Translate(
-	// 	BASE_X,
-	// 	conf.GAME_H/2-float64(titleFrameH)*scaleTitle/2,
-	// )
+	titleFrameW, titleFrameH := assets.SheetTitleFrameData.W, assets.SheetTitleFrameData.H
+	scaleTitle := float64(min(conf.GAME_W/titleFrameW, conf.GAME_H/titleFrameH)) * 0.5
+	scene.AnimTitle = graphics.NewAnimationPlayer(ctx.Loader.LoadImage(assets.ImageSheetTitle).Data)
+	scene.AnimTitle.AddStateAnimation("row1", 0, 0, titleFrameW, titleFrameH, assets.SheetTitleFrameData.MaxCols, false)
+	scene.AnimTitle.SetFPS(0)
+	utils.DIOReplaceAlpha(scene.AnimTitle.DIO, 0)
+	scene.AnimTitle.Update()
+	scene.AnimTitle.DIO.GeoM.Scale(scaleTitle, scaleTitle)
+	scene.AnimTitle.DIO.GeoM.Translate(
+		BASE_X,
+		conf.GAME_H/2-float64(titleFrameH)*scaleTitle/2,
+	)
 
 	txtSubtitle := graphics.NewText(&resFontJamboree18.Face, fmt.Sprintf("press <%s> to continue", keys[0]), true)
 	txtSubtitle.SetPos(conf.GAME_W/2, conf.GAME_H-txtSubtitle.Face.Metrics().HAscent*2)
@@ -124,8 +124,6 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 		AutoWidth:        true,
 	})
 	scene.BannerSubtitle.SetVisible(false)
-	// scene.FaderSubtitle = effects.NewFader(0, 1, 1)
-	// scene.FaderSubtitle.Stopped = true
 
 	versionText := graphics.NewText(&resFontJamboree18.Face, "version: "+conf.GAME_VERSION, true)
 	versionText.SetPos(conf.GAME_W-BASE_X*0.3, conf.GAME_H-versionText.Face.Metrics().HAscent)
@@ -225,7 +223,7 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 	scene.LayerText.Disabled = false
 	scene.LayerText.Uniforms = shaders.NewSilentHillRedShaderUniforms(shaders.FadeStateHidden)
 
-	uniforms := scene.LayerText.Uniforms.(*shaders.SilentHillRedShaderUniforms)
+	uniforms := graphics.MustCastUniform[*shaders.SilentHillRedShaderUniforms](scene.LayerText)
 	scene.BannerSubtitle.UpdateBannerPositionForce(uniforms)
 
 	if conf.DEV {
@@ -254,10 +252,7 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 	scene.LayerText.Vertices = vx
 	scene.LayerText.Indices = ix
 
-	uniform, ok := scene.LayerText.Uniforms.(*shaders.SilentHillRedShaderUniforms)
-	if !ok {
-		panic("incorrect casting")
-	}
+	uniform := graphics.MustCastUniform[*shaders.SilentHillRedShaderUniforms](scene.LayerText)
 
 	scene.Routine = routine.New()
 	scene.Routine.Define(
@@ -281,9 +276,9 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 				scene.AnimDesk.SetStateReset("row1")
 				scene.AnimDesk.Update()
 				scene.BannerSubtitle.SetVisible(false)
-				// scene.AnimTitle.SetStateReset("row1")
-				// utils.DIOReplaceAlpha(scene.AnimTitle.DIO, 1)
-				// scene.AnimTitle.Update()
+				scene.AnimTitle.SetStateReset("row1")
+				utils.DIOReplaceAlpha(scene.AnimTitle.DIO, 1)
+				scene.AnimTitle.Update()
 				return routine.FlowNext
 			}
 			return routine.FlowIdle
@@ -300,7 +295,6 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 			scene.CurrentStateName = "waiting flicker... " + strconv.Itoa(waitFor)
 			scene.TimerSys.After(time.Second*time.Duration(waitFor), func() {
 				scene.RandomFlicker()
-				// scene.RandomTitleFrame()
 			})
 			return routine.FlowNext
 		}),
@@ -319,35 +313,41 @@ func (scene *Main_Menu_Scene) RandomFlicker() {
 		scene.AnimDesk.Paused = false
 		scene.AnimDesk.SetStateReset("row1")
 		scene.AnimDesk.SetFPS(float64(utils.IntRandRange(4, 8)))
+		scene.TitleGlitchCooldown = false
 	})
 }
 
-// func (scene *Main_Menu_Scene) RandomTitleFrame() {
-// 	waitFor := utils.IntRandRange(3, 6)
-// 	scene.TimerSys.After(time.Second*time.Duration(waitFor), func() {
-// 		scene.AnimTitle.Paused = false
-// 		scene.AnimTitle.SetStateReset("row1")
-// 		scene.AnimTitle.SetFPS(float64(utils.IntRandRange(1, 2)))
-// 	})
-// }
+func (scene *Main_Menu_Scene) TriggerTitleGlitch() {
+	if scene.TitleGlitchCooldown {
+		return
+	}
+
+	scene.TitleGlitchCooldown = true
+	scene.AnimTitle.Paused = false
+	scene.AnimTitle.SetStateReset("row1")
+	scene.AnimTitle.SetFPS(float64(utils.IntRandRange(20, 35)))
+
+	glitchDuration := time.Millisecond * time.Duration(utils.IntRandRange(100, 300))
+	scene.TimerSys.After(glitchDuration, func() {
+		scene.AnimTitle.PauseAtFrame(0)
+		scene.AnimTitle.SetFPS(0)
+	})
+}
 
 func (scene *Main_Menu_Scene) Update() error {
 	scene.TimerSys.Update()
 	scene.Routine.Update()
 
-	// scene.FaderSubtitle.Update()
-	// cs := scene.FaderSubtitle.GetCS()
-	// scene.TextSubtitle.DO.ColorScale = *cs
-
 	if scene.SceneManager.IsFading() {
 		return nil
 	}
 
-	// if scene.AnimTitle.DIO.ColorScale.A() < 1.0 {
-	// 	scene.AnimTitle.DIO.ColorScale = *cs
-	// }
-
 	scene.AnimDesk.Update()
+
+	if scene.AnimDesk.State() == "row2" && scene.AnimDesk.IsInLastFrame() {
+		scene.TriggerTitleGlitch()
+	}
+
 	if scene.AnimDesk.IsInLastFrame() {
 		switch scene.AnimDesk.State() {
 		case "row1":
@@ -362,18 +362,12 @@ func (scene *Main_Menu_Scene) Update() error {
 		}
 	}
 
-	// scene.AnimTitle.Update()
-	// if scene.AnimTitle.IsInLastFrame() {
-	// 	scene.AnimTitle.SetStateReset("row1")
-	// 	scene.AnimTitle.PauseAtFrame(0)
-	// 	scene.AnimTitle.SetFPS(0)
-	// 	scene.RandomTitleFrame()
-	// }
-
-	uniform, ok := scene.LayerText.Uniforms.(*shaders.SilentHillRedShaderUniforms)
-	if !ok {
-		panic("incorrect casting")
+	scene.AnimTitle.Update()
+	if scene.AnimTitle.IsInLastFrame() && !scene.AnimTitle.Paused {
+		scene.AnimTitle.SetStateReset("row1")
 	}
+
+	uniform := graphics.MustCastUniform[*shaders.SilentHillRedShaderUniforms](scene.LayerText)
 	uniform.Time += 0.01
 	v := (math.Sin(uniform.Time) + 1) / 2
 	v = v*0.5 + 1.0
@@ -468,10 +462,7 @@ func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
 	canvas2 := scene.LayerText.Canvas
 	canvas2.Clear()
 
-	uniform, ok := scene.LayerText.Uniforms.(*shaders.SilentHillRedShaderUniforms)
-	if !ok {
-		panic("incorrect casting")
-	}
+	uniform := graphics.MustCastUniform[*shaders.SilentHillRedShaderUniforms](scene.LayerText)
 
 	uniform.ToShaders(scene.LayerText.DTSO)
 
@@ -480,12 +471,12 @@ func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
 		canvas.DrawImage(scene.AnimHallway.CurrentFrame, scene.AnimHallway.DIO)
 	case MENU_QUIT:
 		canvas.DrawImage(scene.AnimDesk.CurrentFrame, scene.AnimDesk.DIO)
-		// canvas.DrawImage(scene.AnimTitle.CurrentFrame, scene.AnimTitle.DIO)
+		canvas.DrawImage(scene.AnimTitle.CurrentFrame, scene.AnimTitle.DIO)
 		scene.MenuQuit.Draw(canvas2)
 		scene.TextQuit.Draw(canvas2)
 	default:
 		canvas.DrawImage(scene.AnimDesk.CurrentFrame, scene.AnimDesk.DIO)
-		// canvas.DrawImage(scene.AnimTitle.CurrentFrame, scene.AnimTitle.DIO)
+		canvas.DrawImage(scene.AnimTitle.CurrentFrame, scene.AnimTitle.DIO)
 		scene.BannerSubtitle.Draw(canvas2)
 		if scene.ShowMenuTexts {
 			scene.TextVersion.Draw(canvas)

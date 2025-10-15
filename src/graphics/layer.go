@@ -96,3 +96,11 @@ func (layer *Layer) ApplyTransformation() {
 		layer.DRSO.GeoM.Translate(layer.X, layer.Y)
 	}
 }
+
+func MustCastUniform[T shaders.ShaderUniforms](layer *Layer) T {
+	uniform, ok := layer.Uniforms.(T)
+	if !ok {
+		panic("incorrect uniform type casting")
+	}
+	return uniform
+}
