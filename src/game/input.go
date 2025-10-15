@@ -1,7 +1,6 @@
 package game
 
 import (
-	"remembering-home/src/conf"
 	"remembering-home/src/context"
 
 	input "github.com/quasilyte/ebitengine-input"
@@ -25,20 +24,5 @@ func NewInputHandler(system *input.System) *input.Handler {
 		context.ActionBack:      {input.KeyGamepadBack, input.KeyEscape, input.KeyBackspace},
 	}
 	handler := system.NewHandler(0, keymap)
-	return handler
-}
-
-func NewInputHandlerDev(system *input.System) *input.Handler {
-	if !conf.DEV {
-		panic("DEV mode is not activated. Can't use this feature")
-	}
-	keymap := input.Keymap{
-		context.DevToggleTexts:  {input.KeyD},
-		context.DevToggleLines:  {input.KeyL},
-		context.DevGoToDummy:    {input.Key1},
-		context.DevGoToSplash:   {input.Key2},
-		context.DevGoToMainMenu: {input.Key3},
-	}
-	handler := system.NewHandler(1, keymap)
 	return handler
 }

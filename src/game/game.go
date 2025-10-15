@@ -36,16 +36,15 @@ func NewGame(
 	ebiten.SetFullscreen(settings.Window == conf.WindowModeFullscreen)
 
 	inputHandler := NewInputHandler(inputSystem)
-	var inputHandlerDev *input.Handler
-	if conf.DEV {
-		inputHandlerDev = NewInputHandlerDev(inputSystem)
-	}
-
-	ctx := context.NewGameContext(loader, inputSystem, inputHandler, inputHandlerDev, settings)
+	ctx := context.NewGameContext(loader, inputSystem, inputHandler, settings)
 
 	gs := &Game_State{
 		Context:      ctx,
 		SceneManager: sceneManager,
+	}
+
+	if conf.DEV {
+		debug.SetSceneNavigator(gs)
 	}
 
 	return gs
@@ -92,4 +91,16 @@ func (g *Game_State) Draw(screen *ebiten.Image) {
 	if conf.DEV {
 		debug.DrawDebugOverlay(screen)
 	}
+}
+
+func (g *Game_State) NavigateToDummy() {
+	g.SceneManager.GoTo(scenes.NewDummyScene(g.Context, g.SceneManager))
+}
+
+func (g *Game_State) NavigateToSplash() {
+	g.SceneManager.GoTo(scenes.NewSplashScene(g.Context, g.SceneManager))
+}
+
+func (g *Game_State) NavigateToMainMenu() {
+	g.SceneManager.GoTo(scenes.NewMainMenuScene(g.Context, g.SceneManager))
 }

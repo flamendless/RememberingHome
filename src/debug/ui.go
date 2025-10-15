@@ -12,6 +12,18 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+type SceneNavigator interface {
+	NavigateToDummy()
+	NavigateToSplash()
+	NavigateToMainMenu()
+}
+
+var sceneNavigator SceneNavigator
+
+func SetSceneNavigator(navigator SceneNavigator) {
+	sceneNavigator = navigator
+}
+
 func UpdateDebugUI(context *context.GameContext, sceneName, sceneState string) error {
 	if !ShowTexts {
 		return nil
@@ -32,7 +44,18 @@ func UpdateDebugUI(context *context.GameContext, sceneName, sceneState string) e
 
 			// Debug controls
 			ctx.Header("Debug Controls", false, func() {
-				ctx.Checkbox(&ShowLines, "Show Lines")
+				ctx.Checkbox(&ShowLines, "Show Center Lines")
+				if sceneNavigator != nil {
+					ctx.Button("Go to Dummy").On(func() {
+						sceneNavigator.NavigateToDummy()
+					})
+					ctx.Button("Go to Splash").On(func() {
+						sceneNavigator.NavigateToSplash()
+					})
+					ctx.Button("Go to Main Menu").On(func() {
+						sceneNavigator.NavigateToMainMenu()
+					})
+				}
 			})
 
 			AddShaderDebugControls(ctx)

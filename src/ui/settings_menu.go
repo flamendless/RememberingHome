@@ -269,7 +269,8 @@ func (sm *SettingsMenu) updateSubmenu(inputHandler *input.Handler) {
 
 	currentSubmenu.Update(inputHandler)
 
-	if sm.ActiveSubmenu == SettingsIdxGraphics {
+	switch sm.ActiveSubmenu {
+	case SettingsIdxGraphics:
 		selectedIdx := currentSubmenu.GetSelectedIndex()
 
 		if inputHandler.ActionIsJustReleased(context.ActionMoveLeft) {
@@ -287,7 +288,7 @@ func (sm *SettingsMenu) updateSubmenu(inputHandler *input.Handler) {
 				sm.cycleWindowMode(true)
 			}
 		}
-	} else if sm.ActiveSubmenu == SettingsIdxAudio {
+	case SettingsIdxAudio:
 		selectedIdx := currentSubmenu.GetSelectedIndex()
 		leftPressed := inputHandler.ActionIsPressed(context.ActionMoveLeft)
 		rightPressed := inputHandler.ActionIsPressed(context.ActionMoveRight)
