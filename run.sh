@@ -77,6 +77,13 @@ runwasm() {
 		fi
 	fi
 
+	BROWSER="${BROWSER:-vivaldi}"
+	if "${ISWSL}"; then
+		cmd.exe /c "start ${BROWSER} http://localhost:8080"
+	elif "${ISMAC}"; then
+		open -a ${BROWSER} "http://localhost:8080"
+	fi
+
 	go run github.com/hajimehoshi/wasmserve@latest ./cmd/main.go --dev
 }
 
