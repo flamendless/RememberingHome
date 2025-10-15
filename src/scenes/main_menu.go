@@ -58,6 +58,7 @@ type Main_Menu_Scene struct {
 	CurrentStateName     string
 	MenuMain             *ui.TextList
 	MenuQuit             *ui.TextList
+	MenuSettings         *ui.SettingsMenu
 	SelectedIdx          int
 	ShowMenuTexts        bool
 	ShowQuitSubMenuTexts bool
@@ -219,6 +220,23 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 	scene.MenuQuit.SetVisible(false)
 	scene.MenuQuit.SetEnabled(false)
 
+	scene.MenuSettings = ui.NewSettingsMenu(ui.SettingsMenuConfig{
+		Context:        ctx,
+		BaseX:          BASE_X,
+		BaseY:          baseY,
+		SubmenuOffsetX: float64(SIZE_X + GAP*3),
+		Gap:            0,
+		BannerConfig: ui.BannerConfig{
+			Padding:          BANNER_PADDING,
+			HeightMultiplier: BANNER_HEIGHT * 0.7,
+			AutoWidth:        true,
+		},
+		PrimaryFace:   &resFontJamboree26.Face,
+		SecondaryFace: &resFontJamboree18.Face,
+	})
+	scene.MenuSettings.SetVisible(false)
+	scene.MenuSettings.SetEnabled(false)
+
 	scene.LayerText.DTSO.Images[1] = ctx.Loader.LoadImage(assets.TexturePaper).Data
 	scene.LayerText.Disabled = false
 	scene.LayerText.Uniforms = shaders.NewSilentHillRedShaderUniforms(shaders.FadeStateHidden)
@@ -379,6 +397,7 @@ func (scene *Main_Menu_Scene) Update() error {
 	scene.BannerSubtitle.ApplyShaderAlpha(uniform)
 	scene.MenuMain.ApplyShaderAlpha(uniform)
 	scene.MenuQuit.ApplyShaderAlpha(uniform)
+	scene.MenuSettings.ApplyShaderAlpha(uniform)
 	utils.DOReplaceAlpha(scene.TextQuit.DO, textAlpha)
 	utils.DOReplaceAlpha(scene.TextVersion.DO, textAlpha)
 
@@ -399,7 +418,11 @@ func (scene *Main_Menu_Scene) Update() error {
 					return nil
 				case MENU_SETTINGS:
 					scene.SelectedIdx = MENU_SETTINGS
-					return errs.ErrNotYetImpl
+					scene.ShowMenuTexts = false
+					scene.MenuSettings.SetVisible(true)
+					scene.MenuSettings.SetEnabled(true)
+					scene.MenuSettings.Reset()
+					return nil
 				case MENU_QUIT:
 					scene.ShowMenuTexts = false
 					scene.MenuQuit.SetCurrentIndex(MENU_QUIT_CANCEL)
@@ -420,10 +443,7 @@ func (scene *Main_Menu_Scene) Update() error {
 		_, posY, _, sizeY := graphics.CalculateBannerPosition(curText, scene.MenuMain.GetBannerWidth(), bannerHeight)
 		fixedPosX := BASE_X - BANNER_PADDING*3
 
-		uniform.BannerPos[0] = fixedPosX
-		uniform.BannerPos[1] = posY
-		uniform.BannerSize[0] = scene.MenuMain.GetBannerWidth()
-		uniform.BannerSize[1] = sizeY
+		uniform.SetBannerBounds(fixedPosX, posY, scene.MenuMain.GetBannerWidth(), sizeY)
 	}
 
 	if !scene.ShowMenuTexts && scene.SelectedIdx == MENU_QUIT {
@@ -450,6 +470,45 @@ func (scene *Main_Menu_Scene) Update() error {
 		scene.MenuQuit.UpdateBannerPosition(uniform)
 	}
 
+	if !scene.ShowMenuTexts && scene.SelectedIdx == MENU_SETTINGS {
+		if scene.CanInteract {
+			scene.MenuSettings.Update(scene.Context.InputHandler)
+
+			if scene.MenuSettings.IsBackRequested() {
+				scene.ShowMenuTexts = true
+				scene.MenuSettings.SetVisible(false)
+				scene.MenuSettings.SetEnabled(false)
+				scene.SelectedIdx = 0
+				scene.MenuMain.SetCurrentIndex(MENU_SETTINGS)
+				return nil
+			}
+		}
+
+		if scene.MenuSettings.GetCurrentLevel() == ui.MenuLevelMain {
+			mainList := scene.MenuSettings.GetMainList()
+			curText := mainList.GetSelectedText()
+			textH := curText.DO.LineSpacing
+			bannerHeight := float64(textH) * BANNER_HEIGHT * 0.7
+
+			_, posY, _, sizeY := graphics.CalculateBannerPosition(curText, mainList.GetBannerWidth(), bannerHeight)
+			fixedPosX := BASE_X - BANNER_PADDING*3
+
+			uniform.SetBannerBounds(fixedPosX, posY, mainList.GetBannerWidth(), sizeY)
+		} else {
+			submenu := scene.MenuSettings.GetActiveSubmenu()
+			if submenu != nil {
+				curText := submenu.GetSelectedText()
+				textH := curText.DO.LineSpacing
+				bannerHeight := float64(textH) * BANNER_HEIGHT * 0.7
+
+				_, posY, _, sizeY := graphics.CalculateBannerPosition(curText, submenu.GetBannerWidth(), bannerHeight)
+				fixedPosX := scene.MenuSettings.GetMainList().Texts[0].X + float64(SIZE_X+GAP*2) - BANNER_PADDING*3
+
+				uniform.SetBannerBounds(fixedPosX, posY, submenu.GetBannerWidth(), sizeY)
+			}
+		}
+	}
+
 	scene.LayerText.ApplyTransformation()
 
 	return nil
@@ -469,6 +528,7 @@ func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
 	switch scene.SelectedIdx {
 	case MENU_SETTINGS:
 		canvas.DrawImage(scene.AnimHallway.CurrentFrame, scene.AnimHallway.DIO)
+		scene.MenuSettings.Draw(canvas2)
 	case MENU_QUIT:
 		canvas.DrawImage(scene.AnimDesk.CurrentFrame, scene.AnimDesk.DIO)
 		canvas.DrawImage(scene.AnimTitle.CurrentFrame, scene.AnimTitle.DIO)

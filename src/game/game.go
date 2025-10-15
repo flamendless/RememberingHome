@@ -24,6 +24,7 @@ func NewGame(
 	loader *resource.Loader,
 	sceneManager *scenes.Scene_Manager,
 	inputSystem *input.System,
+	settings *conf.Settings,
 ) *Game_State {
 	iconImg := loader.LoadImage(assets.ImageWindowIcon)
 	icons := []image.Image{iconImg.Data}
@@ -32,7 +33,7 @@ func NewGame(
 	ebiten.SetWindowTitle(title)
 	ebiten.SetWindowIcon(icons)
 	ebiten.SetWindowSize(conf.WINDOW_W, conf.WINDOW_H)
-	ebiten.SetFullscreen(conf.FULLSCREEN)
+	ebiten.SetFullscreen(settings.Window == conf.WindowModeFullscreen)
 
 	inputHandler := NewInputHandler(inputSystem)
 	var inputHandlerDev *input.Handler
@@ -40,7 +41,7 @@ func NewGame(
 		inputHandlerDev = NewInputHandlerDev(inputSystem)
 	}
 
-	ctx := context.NewGameContext(loader, inputSystem, inputHandler, inputHandlerDev)
+	ctx := context.NewGameContext(loader, inputSystem, inputHandler, inputHandlerDev, settings)
 
 	gs := &Game_State{
 		Context:      ctx,
@@ -69,7 +70,7 @@ func (g *Game_State) Update() error {
 			sceneState = "None"
 		}
 
-		if err := debug.UpdateDebugUI(sceneName, sceneState); err != nil {
+		if err := debug.UpdateDebugUI(g.Context, sceneName, sceneState); err != nil {
 			return err
 		}
 	}

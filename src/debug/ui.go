@@ -5,24 +5,26 @@ import (
 	"image"
 	"remembering-home/src/assets/shaders"
 	"remembering-home/src/conf"
+	"remembering-home/src/context"
 	"runtime"
 
 	"github.com/ebitengine/debugui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-func UpdateDebugUI(sceneName, sceneState string) error {
+func UpdateDebugUI(context *context.GameContext, sceneName, sceneState string) error {
 	if !ShowTexts {
 		return nil
 	}
 
 	_, err := DebugUI.Update(func(ctx *debugui.Context) error {
 		ctx.Window("Debug Overlay", image.Rect(10, 10, 300, 300), func(layout debugui.ContainerLayout) {
-			// Performance metrics
 			ctx.Text(fmt.Sprintf("OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-			ctx.Text(fmt.Sprintf("Version: %s", conf.GAME_VERSION))
+			ctx.Text(fmt.Sprintf("Version/Dev: %s/%v", conf.GAME_VERSION, conf.DEV))
 			ctx.Text(fmt.Sprintf("FPS: %.2f", ebiten.ActualFPS()))
 			ctx.Text(fmt.Sprintf("TPS: %.2f", ebiten.ActualTPS()))
+			ctx.Text(fmt.Sprintf("Mode/Quality: %s, %s", context.Settings.Window.String(), context.Settings.Quality.String()))
+			ctx.Text(fmt.Sprintf("Volume/Music: %d, %d", context.Settings.Volume, context.Settings.Music))
 
 			// Scene information
 			ctx.Text(fmt.Sprintf("Scene: %s", sceneName))

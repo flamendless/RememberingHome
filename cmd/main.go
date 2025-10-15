@@ -14,7 +14,8 @@ import (
 )
 
 func main() {
-	conf.Log()
+	settings := conf.NewSettings()
+	conf.Log(settings)
 
 	logger.Log().Info("Setting up resources loader...")
 	loader := assets.NewAssetsLoader()
@@ -22,7 +23,7 @@ func main() {
 	logger.Log().Info("Launching game...")
 	sceneManager := scenes.NewSceneManager()
 	inputSystem := game.NewInputSystem()
-	gameState := game.NewGame(loader, sceneManager, inputSystem)
+	gameState := game.NewGame(loader, sceneManager, inputSystem, settings)
 
 	// sceneManager.GoTo(scenes.NewDummyScene(gameState.Context, sceneManager))
 	// sceneManager.GoTo(scenes.NewSplashScene(gameState.Context, sceneManager))

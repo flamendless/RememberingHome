@@ -22,6 +22,7 @@ func NewInputHandler(system *input.System) *input.Handler {
 		context.ActionMoveLeft:  {input.KeyGamepadLeft, input.KeyLeft, input.KeyA},
 		context.ActionMoveRight: {input.KeyGamepadRight, input.KeyRight, input.KeyD},
 		context.ActionEnter:     {input.KeyGamepadStart, input.KeyEnter, input.KeySpace, input.KeyE},
+		context.ActionBack:      {input.KeyGamepadBack, input.KeyEscape, input.KeyBackspace},
 	}
 	handler := system.NewHandler(0, keymap)
 	return handler

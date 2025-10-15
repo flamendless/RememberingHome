@@ -205,6 +205,13 @@ func (shrsu *SilentHillRedShaderUniforms) GetTextAlpha() float32 {
 	}
 }
 
+func (shrsu *SilentHillRedShaderUniforms) SetBannerBounds(posX, posY, sizeX, sizeY float64) {
+	shrsu.BannerPos[0] = posX
+	shrsu.BannerPos[1] = posY
+	shrsu.BannerSize[0] = sizeX
+	shrsu.BannerSize[1] = sizeY
+}
+
 // TODO: (Brandon) add Update to interface
 func (shrsu *SilentHillRedShaderUniforms) Update() {
 	if !shrsu.isAnimating {

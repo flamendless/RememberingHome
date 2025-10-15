@@ -8,8 +8,7 @@ import (
 )
 
 var (
-	DEV        = true
-	FULLSCREEN = true
+	DEV = true
 )
 
 const (
@@ -21,16 +20,72 @@ const (
 	GAME_H       = 640
 )
 
-func init() {
-	flag.BoolVar(&DEV, "dev", false, "developer mode")
-	flag.Parse()
+type QualityLevel int
 
-	if DEV {
-		FULLSCREEN = false
+const (
+	QualityLow QualityLevel = iota
+	QualityMedium
+	QualityHigh
+)
+
+func (q QualityLevel) String() string {
+	switch q {
+	case QualityLow:
+		return "Low"
+	case QualityMedium:
+		return "Medium"
+	case QualityHigh:
+		return "High"
+	default:
+		return "Unknown"
 	}
 }
 
-func Log() {
+type WindowMode int
+
+const (
+	WindowModeFullscreen WindowMode = iota
+	WindowModeWindowed
+)
+
+func (w WindowMode) String() string {
+	switch w {
+	case WindowModeFullscreen:
+		return "Fullscreen"
+	case WindowModeWindowed:
+		return "Windowed"
+	default:
+		return "Unknown"
+	}
+}
+
+type Settings struct {
+	Quality QualityLevel
+	Window  WindowMode
+	Volume  int
+	Music   int
+}
+
+func NewSettings() *Settings {
+	window := WindowModeFullscreen
+	if DEV {
+		window = WindowModeWindowed
+	}
+
+	return &Settings{
+		Quality: QualityHigh,
+		Window:  window,
+		Volume:  100,
+		Music:   100,
+	}
+}
+
+func init() {
+	flag.BoolVar(&DEV, "dev", false, "developer mode")
+	flag.Parse()
+}
+
+func Log(settings *Settings) {
 	logger.Log().Info(
 		"Game Config",
 		zap.Bool("dev", DEV),
@@ -40,6 +95,6 @@ func Log() {
 		zap.Int("window height", WINDOW_H),
 		zap.Int("game width", GAME_W),
 		zap.Int("game height", GAME_H),
-		zap.Bool("fullscreen", FULLSCREEN),
+		zap.String("window mode", settings.Window.String()),
 	)
 }

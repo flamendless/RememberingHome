@@ -1,6 +1,8 @@
 package context
 
 import (
+	"remembering-home/src/conf"
+
 	input "github.com/quasilyte/ebitengine-input"
 	resource "github.com/quasilyte/ebitengine-resource"
 )
@@ -11,6 +13,7 @@ const (
 	ActionMoveLeft
 	ActionMoveRight
 	ActionEnter
+	ActionBack
 )
 
 const (
@@ -26,6 +29,7 @@ type GameContext struct {
 	InputSystem     *input.System
 	InputHandler    *input.Handler
 	InputHandlerDev *input.Handler
+	Settings        *conf.Settings
 }
 
 func NewGameContext(
@@ -33,11 +37,13 @@ func NewGameContext(
 	inputSystem *input.System,
 	inputHandler *input.Handler,
 	inputHandlerDev *input.Handler,
+	settings *conf.Settings,
 ) *GameContext {
 	return &GameContext{
 		Loader:          loader,
 		InputSystem:     inputSystem,
 		InputHandler:    inputHandler,
 		InputHandlerDev: inputHandlerDev,
+		Settings:        settings,
 	}
 }
