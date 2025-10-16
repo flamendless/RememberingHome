@@ -54,6 +54,7 @@ type SilentHillRedShaderUniforms struct {
 	fadeDirection   bool // true = fade in, false = fade out
 	fadeOutCallback funcCallback
 	fadeInCallback  funcCallback
+	initial         *SilentHillRedShaderUniforms
 }
 
 func (shrsu *SilentHillRedShaderUniforms) ToShaders(dtso *ebiten.DrawTrianglesShaderOptions) {
@@ -127,6 +128,8 @@ func NewSilentHillRedShaderUniforms(initialFadeState FadeState) *SilentHillRedSh
 
 	uniforms.currentFadeState = initialFadeState
 	uniforms.initialFadeState = initialFadeState
+	initialCopy := *uniforms
+	uniforms.initial = &initialCopy
 
 	return uniforms
 }
@@ -234,6 +237,10 @@ func (shrsu *SilentHillRedShaderUniforms) Update() {
 		progress := elapsed / shrsu.fadeDuration
 		shrsu.FadeProgress = progress
 	}
+}
+
+func (shrsu *SilentHillRedShaderUniforms) ResetToInitial() {
+	*shrsu = *shrsu.initial
 }
 
 var _ ShaderUniforms = (*SilentHillRedShaderUniforms)(nil)
