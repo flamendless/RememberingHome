@@ -14,6 +14,7 @@ type MenuTextShaderUniforms struct {
 	WhiteCutoff       float32 // 0.0 - 1.0
 	Velocity          [2]float32
 	Color             [4]float32
+	initial           *MenuTextShaderUniforms
 }
 
 func (mtsu *MenuTextShaderUniforms) ToShaders(dtso *ebiten.DrawTrianglesShaderOptions) {
@@ -28,6 +29,12 @@ func (mtsu *MenuTextShaderUniforms) ToShaders(dtso *ebiten.DrawTrianglesShaderOp
 		"Velocity":          mtsu.Velocity,
 		"Color":             mtsu.Color,
 	}
+}
+
+func (mtsu *MenuTextShaderUniforms) Update() {}
+
+func (mtsu *MenuTextShaderUniforms) ResetToInitial() {
+	*mtsu = *mtsu.initial
 }
 
 var _ ShaderUniforms = (*MenuTextShaderUniforms)(nil)

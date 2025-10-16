@@ -12,8 +12,15 @@ type WaterShaderUniforms struct {
 	Scale        float32
 	FastPeriod   float64
 	SlowPeriod   float64
+	initial      *WaterShaderUniforms
 }
 
 func (wsu *WaterShaderUniforms) ToShaders(dtso *ebiten.DrawTrianglesShaderOptions) {}
+
+func (wsu *WaterShaderUniforms) Update() {}
+
+func (wsu *WaterShaderUniforms) ResetToInitial() {
+	*wsu = *wsu.initial
+}
 
 var _ ShaderUniforms = (*WaterShaderUniforms)(nil)

@@ -215,7 +215,6 @@ func (shrsu *SilentHillRedShaderUniforms) SetBannerBounds(posX, posY, sizeX, siz
 	shrsu.BannerSize[1] = sizeY
 }
 
-// TODO: (Brandon) add Update to interface
 func (shrsu *SilentHillRedShaderUniforms) Update() {
 	if !shrsu.isAnimating {
 		return

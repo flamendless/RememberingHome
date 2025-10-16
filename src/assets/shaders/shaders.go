@@ -6,4 +6,6 @@ import (
 
 type ShaderUniforms interface {
 	ToShaders(DTSO *ebiten.DrawTrianglesShaderOptions)
+	Update()
+	ResetToInitial()
 }
