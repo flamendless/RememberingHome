@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"image"
 	"remembering-home/src/assets"
+	"remembering-home/src/assets/shaders"
 	"remembering-home/src/conf"
 	"remembering-home/src/context"
 	"remembering-home/src/debug"
+	"remembering-home/src/graphics"
 	"remembering-home/src/scenes"
 	"runtime"
 
@@ -16,8 +18,9 @@ import (
 )
 
 type Game_State struct {
-	Context      *context.GameContext
-	SceneManager *scenes.Scene_Manager
+	Context          *context.GameContext
+	SceneManager     *scenes.Scene_Manager
+	finalShaderLayer *graphics.Layer
 }
 
 func NewGame(
@@ -45,6 +48,19 @@ func NewGame(
 
 	if conf.DEV {
 		debug.SetSceneNavigator(gs)
+	}
+
+	gs.finalShaderLayer = graphics.NewLayerWithShader(
+		"quality",
+		conf.GAME_W,
+		conf.GAME_H,
+		loader.LoadShader(assets.ShaderGraphicsQuality).Data,
+	)
+	gs.finalShaderLayer.Disabled = false
+	gs.finalShaderLayer.Uniforms = shaders.NewGraphicsQualityUniform(settings)
+
+	if conf.DEV {
+		debug.AddDebugShader(gs.finalShaderLayer.Uniforms)
 	}
 
 	return gs
@@ -86,7 +102,15 @@ func (g *Game_State) Draw(screen *ebiten.Image) {
 		return
 	}
 
-	g.SceneManager.Draw(screen)
+	// Draw scene to the layer canvas first
+	g.finalShaderLayer.Canvas.Clear()
+	g.SceneManager.Draw(g.finalShaderLayer.Canvas)
+
+	// Update and apply graphics quality shader
+	uniform := graphics.MustCastUniform[*shaders.GraphicsQualityUniforms](g.finalShaderLayer)
+	uniform.Update()
+	uniform.ToShadersDRSO(g.finalShaderLayer.DRSO)
+	g.finalShaderLayer.RenderWithShader(screen)
 
 	if conf.DEV {
 		debug.DrawDebugOverlay(screen)

@@ -5,6 +5,7 @@ import (
 )
 
 type WaterShaderUniforms struct {
+	initial      *WaterShaderUniforms
 	ScreenSize   [2]float32
 	WaveShift    float32
 	WaveOffset   [2]float32
@@ -12,7 +13,6 @@ type WaterShaderUniforms struct {
 	Scale        float32
 	FastPeriod   float64
 	SlowPeriod   float64
-	initial      *WaterShaderUniforms
 }
 
 func (wsu *WaterShaderUniforms) ToShaders(dtso *ebiten.DrawTrianglesShaderOptions) {}

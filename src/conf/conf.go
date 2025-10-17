@@ -41,6 +41,19 @@ func (q QualityLevel) String() string {
 	}
 }
 
+func (q QualityLevel) ToShaderValue() float64 {
+	switch q {
+	case QualityLow:
+		return 0.0
+	case QualityMedium:
+		return 1.0
+	case QualityHigh:
+		return 2.0
+	default:
+		return 2.0
+	}
+}
+
 type WindowMode int
 
 const (

@@ -98,6 +98,9 @@ func (layer *Layer) ApplyTransformation() {
 }
 
 func MustCastUniform[T shaders.ShaderUniforms](layer *Layer) T {
+	if layer.Uniforms == nil {
+		panic("maybe you forgot to do layer.Uniforms = shaders.NewXYZ")
+	}
 	uniform, ok := layer.Uniforms.(T)
 	if !ok {
 		panic("incorrect uniform type casting")

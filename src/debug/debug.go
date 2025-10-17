@@ -12,11 +12,11 @@ import (
 )
 
 var (
-	WSLTricked         bool
-	ShowTexts          bool
-	ShowLines          bool
-	DebugUI            debugui.DebugUI
-	CurrentDebugShader shaders.ShaderUniforms
+	WSLTricked          bool
+	ShowTexts           bool
+	ShowLines           bool
+	DebugUI             debugui.DebugUI
+	CurrentDebugShaders []shaders.ShaderUniforms
 )
 
 const (
@@ -41,14 +41,26 @@ func FixWSLWindow() {
 	}
 }
 
-// SetDebugShader sets the current shader to debug
-func SetDebugShader(uniforms shaders.ShaderUniforms) {
-	CurrentDebugShader = uniforms
+func AddDebugShader(uniforms shaders.ShaderUniforms) {
+	for _, existing := range CurrentDebugShaders {
+		if existing == uniforms {
+			return
+		}
+	}
+	CurrentDebugShaders = append(CurrentDebugShaders, uniforms)
 }
 
-// ClearDebugShader clears the current debug shader
-func ClearDebugShader() {
-	CurrentDebugShader = nil
+func RemoveDebugShader(uniforms shaders.ShaderUniforms) {
+	for i, existing := range CurrentDebugShaders {
+		if existing == uniforms {
+			CurrentDebugShaders = append(CurrentDebugShaders[:i], CurrentDebugShaders[i+1:]...)
+			return
+		}
+	}
+}
+
+func ClearDebugShaders() {
+	CurrentDebugShaders = nil
 }
 
 func DrawDebugOverlay(screen *ebiten.Image) {

@@ -14,6 +14,7 @@ const (
 type funcCallback func()
 
 type SilentHillRedShaderUniforms struct {
+	initial        *SilentHillRedShaderUniforms
 	ID             string
 	Time           float64
 	BannerPos      [2]float64
@@ -54,7 +55,6 @@ type SilentHillRedShaderUniforms struct {
 	fadeDirection   bool // true = fade in, false = fade out
 	fadeOutCallback funcCallback
 	fadeInCallback  funcCallback
-	initial         *SilentHillRedShaderUniforms
 }
 
 func (shrsu *SilentHillRedShaderUniforms) ToShaders(dtso *ebiten.DrawTrianglesShaderOptions) {

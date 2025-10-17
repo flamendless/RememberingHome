@@ -68,13 +68,19 @@ func UpdateDebugUI(context *context.GameContext, sceneName, sceneState string) e
 
 func AddShaderDebugControls(ctx *debugui.Context) {
 	ctx.Header("Shader Debug", false, func() {
-		if CurrentDebugShader == nil {
-			ctx.Text("No shader set for debugging")
+		if len(CurrentDebugShaders) == 0 {
+			ctx.Text("No shaders set for debugging")
 			return
 		}
 
-		if uniforms, ok := CurrentDebugShader.(*shaders.SilentHillRedShaderUniforms); ok {
-			debugSilentHillShader(ctx, uniforms)
+		for _, shader := range CurrentDebugShaders {
+			if uniforms, ok := shader.(*shaders.GraphicsQualityUniforms); ok {
+				debugGraphicsQualityShader(ctx, uniforms)
+			}
+
+			if uniforms, ok := shader.(*shaders.SilentHillRedShaderUniforms); ok {
+				debugSilentHillShader(ctx, uniforms)
+			}
 		}
 	})
 }
@@ -172,6 +178,24 @@ func debugSilentHillShader(ctx *debugui.Context, uniforms *shaders.SilentHillRed
 			ctx.Text("Banner Height:")
 			ctx.SliderF(&uniforms.BannerSize[1], 5.0, 100.0, 1.0, 0)
 		})
+
+		ctx.Button("Reset to Defaults").On(func() {
+			uniforms.ResetToInitial()
+		})
+	})
+}
+
+func debugGraphicsQualityShader(ctx *debugui.Context, uniforms *shaders.GraphicsQualityUniforms) {
+	ctx.Header("Graphics Quality Shader", false, func() {
+		qualityOptions := []string{"Low", "Medium", "High"}
+		currentIndex := int(uniforms.Settings.Quality)
+
+		ctx.Text("Graphics Quality:")
+		ctx.Dropdown(&currentIndex, qualityOptions).On(func() {
+			uniforms.Settings.Quality = conf.QualityLevel(currentIndex)
+		})
+
+		ctx.Text(fmt.Sprintf("Shader Value: %.1f", uniforms.Quality))
 
 		ctx.Button("Reset to Defaults").On(func() {
 			uniforms.ResetToInitial()

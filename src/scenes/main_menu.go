@@ -238,14 +238,13 @@ func NewMainMenuScene(ctx *context.GameContext, sceneManager SceneManager) *Main
 	scene.MenuSettings.SetEnabled(false)
 
 	scene.LayerText.DTSO.Images[1] = ctx.Loader.LoadImage(assets.TexturePaper).Data
-	scene.LayerText.Disabled = false
 	scene.LayerText.Uniforms = shaders.NewSilentHillRedShaderUniforms(shaders.FadeStateHidden)
 
 	uniforms := graphics.MustCastUniform[*shaders.SilentHillRedShaderUniforms](scene.LayerText)
 	scene.BannerSubtitle.UpdateBannerPositionForce(uniforms)
 
 	if conf.DEV {
-		debug.SetDebugShader(scene.LayerText.Uniforms)
+		debug.AddDebugShader(scene.LayerText.Uniforms)
 	}
 
 	vx, ix := utils.AppendRectVerticesIndices(
@@ -522,7 +521,6 @@ func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
 	canvas2.Clear()
 
 	uniform := graphics.MustCastUniform[*shaders.SilentHillRedShaderUniforms](scene.LayerText)
-
 	uniform.ToShaders(scene.LayerText.DTSO)
 
 	switch scene.SelectedIdx {

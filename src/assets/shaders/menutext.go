@@ -5,6 +5,7 @@ import (
 )
 
 type MenuTextShaderUniforms struct {
+	initial           *MenuTextShaderUniforms
 	Time              float64
 	Pos               [2]float32
 	Size              [2]float32
@@ -14,7 +15,6 @@ type MenuTextShaderUniforms struct {
 	WhiteCutoff       float32 // 0.0 - 1.0
 	Velocity          [2]float32
 	Color             [4]float32
-	initial           *MenuTextShaderUniforms
 }
 
 func (mtsu *MenuTextShaderUniforms) ToShaders(dtso *ebiten.DrawTrianglesShaderOptions) {

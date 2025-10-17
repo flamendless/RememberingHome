@@ -223,6 +223,12 @@ func (sm *SettingsMenu) Update(inputHandler *input.Handler) {
 		return
 	}
 
+	if conf.DEV {
+		sm.updateGraphicsSubmenuTexts()
+		sm.AudioSubmenu.Texts[AudioIdxVolume].Txt = sm.formatCyclingOption("Volume", fmt.Sprintf("%d", sm.Context.Settings.Volume))
+		sm.AudioSubmenu.Texts[AudioIdxMusic].Txt = sm.formatCyclingOption("Music", fmt.Sprintf("%d", sm.Context.Settings.Music))
+	}
+
 	switch sm.CurrentLevel {
 	case MenuLevelMain:
 		sm.updateMainMenu(inputHandler)
