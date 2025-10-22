@@ -10,7 +10,7 @@
     - go tools
     - dev tools
 - Scripts:
-    - run.sh
+    - run.sh, cmd/
 - Docs:
     - README
     - Changelogs

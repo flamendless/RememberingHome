@@ -89,6 +89,7 @@ runwasm() {
 
 run() {
 	local -; set -x;
+	lua_to_go
 	if "${ISWSL}"; then
 		runwin
 	elif "${ISMAC}"; then
@@ -100,7 +101,24 @@ run() {
 
 build() {
 	local -; set -x;
-	go build -o "main" ./cmd/main.go
+	go build -o "./tmp/main" ./cmd/main.go
+}
+
+lua_to_go() {
+	go build -o "./tmp/lua_to_go" ./cmd/lua_to_go/main.go
+	echo "Converting Lua files to Go..."
+
+	find ./src/assets/data/atlases -name "atlas.lua" | while read -r file; do
+		echo "Converting atlas: $file"
+		./tmp/lua_to_go --kind atlas --input "$file"
+	done
+
+	find ./src/assets/data/atlases -name "items.lua" | while read -r file; do
+		echo "Converting items: $file"
+		./tmp/lua_to_go --kind item --input "$file"
+	done
+
+	echo "Lua to Go conversion complete!"
 }
 
 if [ "$#" -eq 0 ]; then
