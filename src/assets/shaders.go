@@ -27,6 +27,17 @@ func setShaderResources(loader *resource.Loader) {
 		ShaderSilentHillRed:   {Path: "shaders/silent_hill_red.kage"},
 		ShaderGraphicsQuality: {Path: "shaders/graphics_quality.kage"},
 	}
+
+	_ = map[resource.ShaderID]bool{
+		ShaderNone:            false,
+		ShaderTest:            false,
+		ShaderColorize:        true,
+		ShaderWater:           true,
+		ShaderTextRedBG:       true,
+		ShaderSilentHillRed:   true,
+		ShaderGraphicsQuality: true,
+	}
+
 	for id, res := range shaderResources {
 		logger.Log().Info("Loading shader", zap.String("path", res.Path))
 		loader.ShaderRegistry.Set(id, res)

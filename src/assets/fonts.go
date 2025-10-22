@@ -21,6 +21,14 @@ func setFontResources(loader *resource.Loader) {
 		FontJamboree26: {Path: "fonts/Jamboree.ttf", Size: 26},
 		FontJamboree46: {Path: "fonts/Jamboree.ttf", Size: 46},
 	}
+
+	_ = map[resource.FontID]bool{
+		FontNone:       false,
+		FontJamboree18: true,
+		FontJamboree26: true,
+		FontJamboree46: true,
+	}
+
 	for id, res := range fontResources {
 		logger.Log().Info("Loading font", zap.String("path", res.Path))
 		loader.FontRegistry.Set(id, res)
