@@ -11,20 +11,27 @@ import (
 	"remembering-home/src/common"
 	"remembering-home/src/dialogues"
 	"remembering-home/src/enums"
+	"remembering-home/src/items"
 
 	lua "github.com/yuin/gopher-lua"
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		panic("Usage: lua_to_go --input <lua_file> [--output <go_file>]")
+	if len(os.Args) < 3 {
+		panic("Usage: lua_to_go --kind <atlas|item> --input <lua_file>")
 	}
 
-	var inputFile, outputFile string
+	var kind, inputFile string
 
-	// Parse command line arguments
 	for i := 1; i < len(os.Args); i++ {
 		switch os.Args[i] {
+		case "--kind":
+			if i+1 < len(os.Args) {
+				kind = os.Args[i+1]
+				i++
+			} else {
+				panic("Error: --kind requires a value (atlas or item)")
+			}
 		case "--input":
 			if i+1 < len(os.Args) {
 				inputFile = os.Args[i+1]
@@ -32,49 +39,55 @@ func main() {
 			} else {
 				panic("Error: --input requires a filename")
 			}
-		case "--output":
-			if i+1 < len(os.Args) {
-				outputFile = os.Args[i+1]
-				i++
-			} else {
-				panic("Error: --output requires a filename")
-			}
 		}
 	}
 
+	if kind == "" {
+		panic("Error: --kind is required")
+	}
 	if inputFile == "" {
 		panic("Error: --input is required")
 	}
 
-	// Validate input file extension
+	if kind != "atlas" && kind != "item" {
+		panic("Error: --kind must be either 'atlas' or 'item'")
+	}
+
 	if !strings.HasSuffix(inputFile, ".lua") {
 		panic("Error: input file must have .lua extension")
 	}
 
-	// Set output file if not provided
-	if outputFile == "" {
-		// Extract directory name and create output filename
-		// e.g., storage_room/data.lua -> storage_room_data.go
+	var outputFile string
+	switch kind {
+	case "atlas":
 		dir := filepath.Base(filepath.Dir(inputFile))
-		outputFile = filepath.Join("src/assets/data/atlases", dir+"_data.go")
+		outputFile = filepath.Join("src/atlases", dir+".go")
+	case "item":
+		dir := filepath.Base(filepath.Dir(inputFile))
+		outputFile = filepath.Join("src/items", dir+".go")
 	}
 
-	// Read and parse Lua file
 	luaData, err := parseLuaFile(inputFile)
 	if err != nil {
 		panic(fmt.Sprintf("Error parsing Lua file: %v", err))
 	}
 
-	// Convert to Go data structures
-	goData := convertToGoData(luaData)
-
-	// Generate Go source code
-	goCode, err := generateGoCode(goData)
+	var goCode []byte
+	var varName string
+	switch kind {
+	case "atlas":
+		atlasData := convertToAtlasData(luaData)
+		varName = generateVariableName("Atlas", inputFile)
+		goCode, err = generateAtlasCode(atlasData, varName)
+	case "item":
+		itemData := convertToItemData(luaData)
+		varName = generateVariableName("Item", inputFile)
+		goCode, err = generateItemCode(itemData, varName)
+	}
 	if err != nil {
 		panic(fmt.Sprintf("Error generating Go code: %v", err))
 	}
 
-	// Write output file
 	if err := os.WriteFile(outputFile, goCode, 0644); err != nil {
 		panic(fmt.Sprintf("Error writing output file: %v", err))
 	}
@@ -85,29 +98,124 @@ func main() {
 func parseLuaFile(filename string) (*lua.LTable, error) {
 	L := lua.NewState()
 	defer L.Close()
-
-	// Read the Lua file
 	content, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
-
-	// Execute the Lua code
 	if err := L.DoString(string(content)); err != nil {
 		return nil, err
 	}
-
-	// Get the returned table
 	ret := L.Get(-1)
 	if ret.Type() != lua.LTTable {
 		return nil, fmt.Errorf("expected table, got %s", ret.Type())
 	}
-
 	return ret.(*lua.LTable), nil
 }
 
-func convertToGoData(luaTable *lua.LTable) []atlases.Data {
-	var goData []atlases.Data
+func convertToAtlasData(luaTable *lua.LTable) atlases.AtlasData {
+	var frames []atlases.FrameData
+	var metadata atlases.Metadata
+
+	luaTable.ForEach(func(key, value lua.LValue) {
+		switch key.String() {
+		case "frames":
+			if value.Type() == lua.LTTable {
+				framesTable := value.(*lua.LTable)
+				framesTable.ForEach(func(frameKey, frameValue lua.LValue) {
+					if frameValue.Type() == lua.LTTable {
+						frameTable := frameValue.(*lua.LTable)
+						frame := convertFrameTable(frameKey.String(), frameTable)
+						frames = append(frames, frame)
+					}
+				})
+			}
+		case "meta":
+			if value.Type() == lua.LTTable {
+				metadata = convertMetaTable(value.(*lua.LTable))
+			}
+		}
+	})
+
+	return atlases.AtlasData{
+		Frames:   frames,
+		Metadata: metadata,
+	}
+}
+
+func convertFrameTable(id string, frameTable *lua.LTable) atlases.FrameData {
+	itemID := enums.Item(id)
+	if itemID == enums.ItemUndefined {
+		panic(fmt.Sprintf("Error: undefined item ID '%s'", id))
+	}
+
+	frame := atlases.FrameData{
+		ID:   itemID,
+		Pos:  common.Vec2{X: 0, Y: 0},
+		Size: common.Vec2{X: 0, Y: 0},
+	}
+
+	frameTable.ForEach(func(key, value lua.LValue) {
+		switch key.String() {
+		case "x":
+			if value.Type() == lua.LTNumber {
+				frame.Pos.X = float64(value.(lua.LNumber))
+			}
+		case "y":
+			if value.Type() == lua.LTNumber {
+				frame.Pos.Y = float64(value.(lua.LNumber))
+			}
+		case "w":
+			if value.Type() == lua.LTNumber {
+				frame.Size.X = float64(value.(lua.LNumber))
+			}
+		case "h":
+			if value.Type() == lua.LTNumber {
+				frame.Size.Y = float64(value.(lua.LNumber))
+			}
+		}
+	})
+
+	return frame
+}
+
+func convertMetaTable(metaTable *lua.LTable) atlases.Metadata {
+	metadata := atlases.Metadata{
+		Padding:   0,
+		Extrude:   0,
+		Size:      common.Vec2{X: 0, Y: 0},
+		QuadCount: 0,
+	}
+
+	metaTable.ForEach(func(key, value lua.LValue) {
+		switch key.String() {
+		case "padding":
+			if value.Type() == lua.LTNumber {
+				metadata.Padding = int(value.(lua.LNumber))
+			}
+		case "extrude":
+			if value.Type() == lua.LTNumber {
+				metadata.Extrude = int(value.(lua.LNumber))
+			}
+		case "atlasWidth":
+			if value.Type() == lua.LTNumber {
+				metadata.Size.X = float64(value.(lua.LNumber))
+			}
+		case "atlasHeight":
+			if value.Type() == lua.LTNumber {
+				metadata.Size.Y = float64(value.(lua.LNumber))
+			}
+		case "quadCount":
+			if value.Type() == lua.LTNumber {
+				metadata.QuadCount = int(value.(lua.LNumber))
+			}
+		}
+	})
+
+	return metadata
+}
+
+func convertToItemData(luaTable *lua.LTable) []items.ItemData {
+	var goData []items.ItemData
 
 	luaTable.ForEach(func(key, value lua.LValue) {
 		if value.Type() != lua.LTTable {
@@ -122,8 +230,8 @@ func convertToGoData(luaTable *lua.LTable) []atlases.Data {
 	return goData
 }
 
-func convertTableItem(itemTable *lua.LTable) atlases.Data {
-	data := atlases.Data{
+func convertTableItem(itemTable *lua.LTable) items.ItemData {
+	data := items.ItemData{
 		Item:      enums.ItemUndefined,
 		Name:      "",
 		Pos:       common.Vec2{X: 0, Y: 0},
@@ -137,7 +245,11 @@ func convertTableItem(itemTable *lua.LTable) atlases.Data {
 		switch key.String() {
 		case "id":
 			if value.Type() == lua.LTString {
-				data.Item = enums.Item(value.String())
+				itemID := enums.Item(value.String())
+				if itemID == enums.ItemUndefined {
+					panic(fmt.Sprintf("Error: undefined item ID '%s'", value.String()))
+				}
+				data.Item = itemID
 			}
 		case "name":
 			if value.Type() == lua.LTString {
@@ -178,9 +290,19 @@ func convertTableItem(itemTable *lua.LTable) atlases.Data {
 					roomID := dialogueTable.RawGetInt(1)
 					itemID := dialogueTable.RawGetInt(2)
 					if roomID.Type() == lua.LTString && itemID.Type() == lua.LTString {
+						room := enums.Room(roomID.String())
+						item := enums.Item(itemID.String())
+
+						if room == enums.RoomUndefined {
+							panic(fmt.Sprintf("Error: undefined room ID '%s'", roomID.String()))
+						}
+						if item == enums.ItemUndefined {
+							panic(fmt.Sprintf("Error: undefined item ID '%s'", itemID.String()))
+						}
+
 						data.Dialogue = dialogues.DialogueKeys{
-							Room: enums.Room(roomID.String()),
-							Item: enums.Item(itemID.String()),
+							Room: room,
+							Item: item,
 						}
 					}
 				}
@@ -191,23 +313,59 @@ func convertTableItem(itemTable *lua.LTable) atlases.Data {
 	return data
 }
 
-func generateGoCode(data []atlases.Data) ([]byte, error) {
+func generateAtlasCode(data atlases.AtlasData, varName string) ([]byte, error) {
 	var buf strings.Builder
 
-	// Package declaration
 	buf.WriteString("// Code generated by lua_to_go. DO NOT EDIT.\n")
 	buf.WriteString("package atlases\n\n")
 
-	// Imports
 	buf.WriteString("import (\n")
-	buf.WriteString("\t\"remembering-home/src/atlases\"\n")
+	buf.WriteString("\t\"remembering-home/src/common\"\n")
+	buf.WriteString("\t\"remembering-home/src/enums\"\n")
+	buf.WriteString(")\n\n")
+
+	buf.WriteString(fmt.Sprintf("var %s = AtlasData{\n", varName))
+
+	buf.WriteString("\tFrames: []FrameData{\n")
+	for _, frame := range data.Frames {
+		buf.WriteString("\t\t{\n")
+		buf.WriteString(fmt.Sprintf("\t\t\tID: enums.%s,\n", frame.ID.Constant()))
+		buf.WriteString(fmt.Sprintf("\t\t\tPos: common.Vec2{X: %g, Y: %g},\n", frame.Pos.X, frame.Pos.Y))
+		buf.WriteString(fmt.Sprintf("\t\t\tSize: common.Vec2{X: %g, Y: %g},\n", frame.Size.X, frame.Size.Y))
+		buf.WriteString("\t\t},\n")
+	}
+	buf.WriteString("\t},\n")
+
+	buf.WriteString("\tMetadata: Metadata{\n")
+	buf.WriteString(fmt.Sprintf("\t\tPadding: %d,\n", data.Metadata.Padding))
+	buf.WriteString(fmt.Sprintf("\t\tExtrude: %d,\n", data.Metadata.Extrude))
+	buf.WriteString(fmt.Sprintf("\t\tSize: common.Vec2{X: %g, Y: %g},\n", data.Metadata.Size.X, data.Metadata.Size.Y))
+	buf.WriteString(fmt.Sprintf("\t\tQuadCount: %d,\n", data.Metadata.QuadCount))
+	buf.WriteString("\t},\n")
+
+	buf.WriteString("}\n")
+
+	formatted, err := format.Source([]byte(buf.String()))
+	if err != nil {
+		return nil, err
+	}
+
+	return formatted, nil
+}
+
+func generateItemCode(data []items.ItemData, varName string) ([]byte, error) {
+	var buf strings.Builder
+
+	buf.WriteString("// Code generated by lua_to_go. DO NOT EDIT.\n")
+	buf.WriteString("package items\n\n")
+
+	buf.WriteString("import (\n")
 	buf.WriteString("\t\"remembering-home/src/common\"\n")
 	buf.WriteString("\t\"remembering-home/src/dialogues\"\n")
 	buf.WriteString("\t\"remembering-home/src/enums\"\n")
 	buf.WriteString(")\n\n")
 
-	// Variable declaration
-	buf.WriteString("var Data = []atlases.Data{\n")
+	buf.WriteString(fmt.Sprintf("var %s = []ItemData{\n", varName))
 
 	for _, item := range data {
 		buf.WriteString("\t{\n")
@@ -256,11 +414,21 @@ func generateGoCode(data []atlases.Data) ([]byte, error) {
 
 	buf.WriteString("}\n")
 
-	// Format the code
 	formatted, err := format.Source([]byte(buf.String()))
 	if err != nil {
 		return nil, err
 	}
 
 	return formatted, nil
+}
+
+func generateVariableName(kind string, inputFile string) string {
+	dir := filepath.Base(filepath.Dir(inputFile))
+	parts := strings.Split(dir, "_")
+	for i, part := range parts {
+		if len(part) > 0 {
+			parts[i] = strings.ToUpper(part[:1]) + part[1:]
+		}
+	}
+	return kind + strings.Join(parts, "")
 }
