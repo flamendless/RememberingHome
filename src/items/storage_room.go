@@ -22,12 +22,14 @@ var ItemStorageRoom = []ItemData{
 	{
 		Item:      enums.ItemLeftDoor,
 		Pos:       common.Vec2{X: 16, Y: 31},
+		Z:         4,
 		ReqColDir: enums.DirectionLeft,
 		Tags:      []enums.ItemClass{enums.ItemClassDoor},
 	},
 	{
 		Item:      enums.ItemRightDoor,
 		Pos:       common.Vec2{X: 332, Y: 47},
+		Z:         4,
 		ReqColDir: enums.DirectionRight,
 		Tags:      []enums.ItemClass{enums.ItemClassDoor},
 	},
@@ -42,11 +44,13 @@ var ItemStorageRoom = []ItemData{
 	{
 		Item:  enums.ItemLadder,
 		Pos:   common.Vec2{X: 97, Y: 42},
+		Z:     4,
 		NoCol: true,
 	},
 	{
 		Item: enums.ItemShelf,
 		Pos:  common.Vec2{X: 208, Y: 52},
+		Z:    6,
 		Dialogue: dialogues.DialogueKeys{
 			Room: enums.RoomStorageRoom,
 			Item: enums.ItemShelf,
@@ -55,11 +59,13 @@ var ItemStorageRoom = []ItemData{
 	{
 		Item:  enums.ItemShelfSide,
 		Pos:   common.Vec2{X: 309, Y: 42},
+		Z:     3,
 		NoCol: true,
 	},
 	{
 		Item: enums.ItemTable,
 		Pos:  common.Vec2{X: 102, Y: 72},
+		Z:    6,
 		Dialogue: dialogues.DialogueKeys{
 			Room: enums.RoomStorageRoom,
 			Item: enums.ItemTable,
@@ -68,10 +74,12 @@ var ItemStorageRoom = []ItemData{
 	{
 		Item: enums.ItemTires,
 		Pos:  common.Vec2{X: 107, Y: 91},
+		Z:    5,
 	},
 	{
 		Item: enums.ItemFilingCabinet,
 		Pos:  common.Vec2{X: 180, Y: 68},
+		Z:    6,
 		Dialogue: dialogues.DialogueKeys{
 			Room: enums.RoomStorageRoom,
 			Item: enums.ItemFilingCabinet,
@@ -80,18 +88,21 @@ var ItemStorageRoom = []ItemData{
 	{
 		Item:  enums.ItemBarrell,
 		Pos:   common.Vec2{X: 76, Y: 90},
+		Z:     5,
 		NoCol: true,
 	},
 	{
 		Item:  enums.ItemBarrell,
 		Name:  "barrell2",
 		Pos:   common.Vec2{X: 142, Y: 90},
+		Z:     4,
 		NoCol: true,
 	},
 	{
 		Item:  enums.ItemBarrell,
 		Name:  "barrell3",
 		Pos:   common.Vec2{X: 264, Y: 90},
+		Z:     4,
 		NoCol: true,
 	},
 }

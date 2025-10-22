@@ -23,6 +23,8 @@ const (
 	ItemWashingMachine Item = "washing_machine"
 	ItemBroom          Item = "broom"
 	ItemElectricalBox  Item = "electrical_box"
+	ItemBasketLeft     Item = "basket_left"
+	ItemBasketRight    Item = "basket_right"
 )
 
 func (i Item) Constant() string {
@@ -65,6 +67,10 @@ func (i Item) Constant() string {
 		return "ItemBroom"
 	case ItemElectricalBox:
 		return "ItemElectricalBox"
+	case ItemBasketLeft:
+		return "ItemBasketLeft"
+	case ItemBasketRight:
+		return "ItemBasketRight"
 	default:
 		return "ItemUndefined"
 	}

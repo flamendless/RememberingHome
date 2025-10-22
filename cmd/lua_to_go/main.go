@@ -133,6 +133,8 @@ func convertToAtlasData(luaTable *lua.LTable) atlases.AtlasData {
 			if value.Type() == lua.LTTable {
 				metadata = convertMetaTable(value.(*lua.LTable))
 			}
+		default:
+			panic(fmt.Sprintf("Error: unknown atlas table key '%s'", key.String()))
 		}
 	})
 
@@ -176,6 +178,8 @@ func convertFrameTable(id string, frameTable *lua.LTable) atlases.FrameData {
 			if value.Type() == lua.LTNumber {
 				frame.Size.Y = float64(value.(lua.LNumber))
 			}
+		default:
+			panic(fmt.Sprintf("Error: unknown frame table key '%s'", key.String()))
 		}
 	})
 
@@ -212,6 +216,8 @@ func convertMetaTable(metaTable *lua.LTable) atlases.Metadata {
 			if value.Type() == lua.LTNumber {
 				metadata.QuadCount = int(value.(lua.LNumber))
 			}
+		default:
+			panic(fmt.Sprintf("Error: unknown meta table key '%s'", key.String()))
 		}
 	})
 
@@ -239,11 +245,17 @@ func convertTableItem(itemTable *lua.LTable) items.ItemData {
 		Item:      enums.ItemUndefined,
 		Name:      "",
 		Pos:       common.Vec2{X: 0, Y: 0},
+		Z:         0,
+		Scale:     1.0,
 		NoCol:     false,
 		ReqColDir: enums.DirectionUndefined,
 		Tags:      []enums.ItemClass{},
 		Dialogue:  dialogues.DialogueKeys{},
+		Grouped:   false,
+		SubItems:  []items.ItemData{},
 	}
+
+	var subItems []items.ItemData
 
 	itemTable.ForEach(func(key, value lua.LValue) {
 		switch key.String() {
@@ -270,6 +282,18 @@ func convertTableItem(itemTable *lua.LTable) items.ItemData {
 		case "y":
 			if value.Type() == lua.LTNumber {
 				data.Pos.Y = float64(value.(lua.LNumber))
+			}
+		case "z":
+			if value.Type() == lua.LTNumber {
+				data.Z = int(value.(lua.LNumber))
+			}
+		case "scale":
+			if value.Type() == lua.LTNumber {
+				data.Scale = float64(value.(lua.LNumber))
+			}
+		case "grouped":
+			if value.Type() == lua.LTBool {
+				data.Grouped = bool(value.(lua.LBool))
 			}
 		case "no_col":
 			if value.Type() == lua.LTBool {
@@ -325,10 +349,73 @@ func convertTableItem(itemTable *lua.LTable) items.ItemData {
 					}
 				}
 			}
+		default:
+			if value.Type() == lua.LTTable && key.Type() == lua.LTNumber {
+				subItemTable := value.(*lua.LTable)
+				subItem := convertSubItem(subItemTable)
+				subItems = append(subItems, subItem)
+			} else {
+				panic(fmt.Sprintf("Error: unknown item table key '%s'", key.String()))
+			}
 		}
 	})
 
+	data.SubItems = subItems
 	return data
+}
+
+func convertSubItem(subItemTable *lua.LTable) items.ItemData {
+	subItem := items.ItemData{
+		Item:      enums.ItemUndefined,
+		Name:      "",
+		Pos:       common.Vec2{X: 0, Y: 0},
+		Z:         0,
+		Scale:     1.0,
+		NoCol:     false,
+		ReqColDir: enums.DirectionUndefined,
+		Tags:      []enums.ItemClass{},
+		Dialogue:  dialogues.DialogueKeys{},
+		Grouped:   false,
+		SubItems:  []items.ItemData{},
+	}
+
+	subItemTable.ForEach(func(key, value lua.LValue) {
+		switch key.String() {
+		case "name":
+			if value.Type() == lua.LTString {
+				name := value.String()
+				if name == "" {
+					panic("Error: empty subgroup name")
+				}
+				itemID := enums.Item(name)
+				if itemID.Constant() == "ItemUndefined" {
+					panic(fmt.Sprintf("Error: undefined subgroup name '%s'", name))
+				}
+				subItem.Item = itemID
+				subItem.Name = name
+			}
+		case "x":
+			if value.Type() == lua.LTNumber {
+				subItem.Pos.X = float64(value.(lua.LNumber))
+			}
+		case "y":
+			if value.Type() == lua.LTNumber {
+				subItem.Pos.Y = float64(value.(lua.LNumber))
+			}
+		case "z":
+			if value.Type() == lua.LTNumber {
+				subItem.Z = int(value.(lua.LNumber))
+			}
+		case "scale":
+			if value.Type() == lua.LTNumber {
+				subItem.Scale = float64(value.(lua.LNumber))
+			}
+		default:
+			panic(fmt.Sprintf("Error: unknown subgroup key '%s'", key.String()))
+		}
+	})
+
+	return subItem
 }
 
 func generateAtlasCode(data atlases.AtlasData, varName string) ([]byte, error) {
@@ -392,6 +479,12 @@ func generateItemCode(data []items.ItemData, varName string) ([]byte, error) {
 			buf.WriteString(fmt.Sprintf("\t\tName: \"%s\",\n", item.Name))
 		}
 		buf.WriteString(fmt.Sprintf("\t\tPos: common.Vec2{X: %g, Y: %g},\n", item.Pos.X, item.Pos.Y))
+		if item.Z != 0 {
+			buf.WriteString(fmt.Sprintf("\t\tZ: %d,\n", item.Z))
+		}
+		if item.Scale != 1.0 {
+			buf.WriteString(fmt.Sprintf("\t\tScale: %g,\n", item.Scale))
+		}
 		if item.NoCol {
 			buf.WriteString("\t\tNoCol: true,\n")
 		}
@@ -424,6 +517,28 @@ func generateItemCode(data []items.ItemData, varName string) ([]byte, error) {
 			}
 			if item.Dialogue.Item != enums.ItemUndefined {
 				buf.WriteString(fmt.Sprintf("\t\t\tItem: enums.%s,\n", item.Dialogue.Item.Constant()))
+			}
+			buf.WriteString("\t\t},\n")
+		}
+		if item.Grouped {
+			buf.WriteString("\t\tGrouped: true,\n")
+		}
+		if len(item.SubItems) > 0 {
+			buf.WriteString("\t\tSubItems: []ItemData{\n")
+			for _, subItem := range item.SubItems {
+				buf.WriteString("\t\t\t{\n")
+				buf.WriteString(fmt.Sprintf("\t\t\t\tItem: enums.%s,\n", subItem.Item.Constant()))
+				if subItem.Name != "" {
+					buf.WriteString(fmt.Sprintf("\t\t\t\tName: \"%s\",\n", subItem.Name))
+				}
+				buf.WriteString(fmt.Sprintf("\t\t\t\tPos: common.Vec2{X: %g, Y: %g},\n", subItem.Pos.X, subItem.Pos.Y))
+				if subItem.Z != 0 {
+					buf.WriteString(fmt.Sprintf("\t\t\t\tZ: %d,\n", subItem.Z))
+				}
+				if subItem.Scale != 1.0 {
+					buf.WriteString(fmt.Sprintf("\t\t\t\tScale: %g,\n", subItem.Scale))
+				}
+				buf.WriteString("\t\t\t},\n")
 			}
 			buf.WriteString("\t\t},\n")
 		}

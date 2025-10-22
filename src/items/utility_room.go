@@ -30,6 +30,7 @@ var ItemUtilityRoom = []ItemData{
 	{
 		Item: enums.ItemShelf,
 		Pos:  common.Vec2{X: 136, Y: 57},
+		Z:    4,
 		Dialogue: dialogues.DialogueKeys{
 			Room: enums.RoomUtilityRoom,
 			Item: enums.ItemShelf,
@@ -38,6 +39,7 @@ var ItemUtilityRoom = []ItemData{
 	{
 		Item: enums.ItemElectricalBox,
 		Pos:  common.Vec2{X: 316, Y: 48},
+		Z:    4,
 		Dialogue: dialogues.DialogueKeys{
 			Room: enums.RoomUtilityRoom,
 			Item: enums.ItemElectricalBox,
@@ -46,11 +48,14 @@ var ItemUtilityRoom = []ItemData{
 	{
 		Item:  enums.ItemIroningBoard,
 		Pos:   common.Vec2{X: 128, Y: 69},
+		Z:     6,
+		Scale: 0.75,
 		NoCol: true,
 	},
 	{
 		Item: enums.ItemWashingMachine,
 		Pos:  common.Vec2{X: 260, Y: 76},
+		Z:    4,
 		Dialogue: dialogues.DialogueKeys{
 			Room: enums.RoomUtilityRoom,
 			Item: enums.ItemWashingMachine,
@@ -59,6 +64,7 @@ var ItemUtilityRoom = []ItemData{
 	{
 		Item:  enums.ItemBroom,
 		Pos:   common.Vec2{X: 110, Y: 60},
+		Z:     4,
 		NoCol: true,
 	},
 	{
@@ -68,41 +74,63 @@ var ItemUtilityRoom = []ItemData{
 			Room: enums.RoomUtilityRoom,
 			Item: enums.ItemBasket,
 		},
+		Grouped: true,
+		SubItems: []ItemData{
+			{
+				Item: enums.ItemBasketLeft,
+				Name: "basket_left",
+				Pos:  common.Vec2{X: 218, Y: 85},
+				Z:    4,
+			},
+			{
+				Item:  enums.ItemBasketRight,
+				Name:  "basket_right",
+				Pos:   common.Vec2{X: 216, Y: 92},
+				Z:     5,
+				Scale: 0.75,
+			},
+		},
 	},
 	{
 		Item:  enums.ItemWood,
 		Name:  "wood1",
 		Pos:   common.Vec2{X: 74, Y: 96},
+		Z:     2,
 		NoCol: true,
 	},
 	{
 		Item:  enums.ItemWood,
 		Name:  "wood2",
 		Pos:   common.Vec2{X: 89, Y: 96},
+		Z:     3,
 		NoCol: true,
 	},
 	{
 		Item:  enums.ItemWood,
 		Name:  "wood3",
 		Pos:   common.Vec2{X: 79, Y: 79},
+		Z:     4,
 		NoCol: true,
 	},
 	{
 		Item:  enums.ItemWood,
 		Name:  "wood4",
 		Pos:   common.Vec2{X: 194, Y: 96},
+		Z:     2,
 		NoCol: true,
 	},
 	{
 		Item:  enums.ItemWood,
 		Name:  "wood5",
 		Pos:   common.Vec2{X: 240, Y: 96},
+		Z:     2,
 		NoCol: true,
 	},
 	{
 		Item:  enums.ItemWood,
 		Name:  "wood6",
 		Pos:   common.Vec2{X: 284, Y: 96},
+		Z:     2,
 		NoCol: true,
 	},
 }
