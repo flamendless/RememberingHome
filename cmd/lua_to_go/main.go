@@ -143,8 +143,12 @@ func convertToAtlasData(luaTable *lua.LTable) atlases.AtlasData {
 }
 
 func convertFrameTable(id string, frameTable *lua.LTable) atlases.FrameData {
+	if id == "" {
+		panic("Error: empty item ID")
+	}
+
 	itemID := enums.Item(id)
-	if itemID == enums.ItemUndefined {
+	if itemID.Constant() == "ItemUndefined" {
 		panic(fmt.Sprintf("Error: undefined item ID '%s'", id))
 	}
 
@@ -245,9 +249,13 @@ func convertTableItem(itemTable *lua.LTable) items.ItemData {
 		switch key.String() {
 		case "id":
 			if value.Type() == lua.LTString {
-				itemID := enums.Item(value.String())
-				if itemID == enums.ItemUndefined {
-					panic(fmt.Sprintf("Error: undefined item ID '%s'", value.String()))
+				id := value.String()
+				if id == "" {
+					panic("Error: empty item ID")
+				}
+				itemID := enums.Item(id)
+				if itemID.Constant() == "ItemUndefined" {
+					panic(fmt.Sprintf("Error: undefined item ID '%s'", id))
 				}
 				data.Item = itemID
 			}
@@ -290,14 +298,24 @@ func convertTableItem(itemTable *lua.LTable) items.ItemData {
 					roomID := dialogueTable.RawGetInt(1)
 					itemID := dialogueTable.RawGetInt(2)
 					if roomID.Type() == lua.LTString && itemID.Type() == lua.LTString {
-						room := enums.Room(roomID.String())
-						item := enums.Item(itemID.String())
+						roomStr := roomID.String()
+						itemStr := itemID.String()
 
-						if room == enums.RoomUndefined {
-							panic(fmt.Sprintf("Error: undefined room ID '%s'", roomID.String()))
+						if roomStr == "" {
+							panic("Error: empty room ID")
 						}
-						if item == enums.ItemUndefined {
-							panic(fmt.Sprintf("Error: undefined item ID '%s'", itemID.String()))
+						if itemStr == "" {
+							panic("Error: empty item ID")
+						}
+
+						room := enums.Room(roomStr)
+						item := enums.Item(itemStr)
+
+						if room.Constant() == "RoomUndefined" {
+							panic(fmt.Sprintf("Error: undefined room ID '%s'", roomStr))
+						}
+						if item.Constant() == "ItemUndefined" {
+							panic(fmt.Sprintf("Error: undefined item ID '%s'", itemStr))
 						}
 
 						data.Dialogue = dialogues.DialogueKeys{

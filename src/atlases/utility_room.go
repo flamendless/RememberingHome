@@ -9,12 +9,22 @@ import (
 var AtlasUtilityRoom = AtlasData{
 	Frames: []FrameData{
 		{
-			ID:   enums.ItemUndefined,
+			ID:   enums.ItemWood2,
+			Pos:  common.Vec2{X: 228, Y: 39},
+			Size: common.Vec2{X: 16, Y: 17},
+		},
+		{
+			ID:   enums.ItemElectricalBox,
+			Pos:  common.Vec2{X: 219, Y: 4},
+			Size: common.Vec2{X: 14, Y: 21},
+		},
+		{
+			ID:   enums.ItemIroningBoard,
 			Pos:  common.Vec2{X: 79, Y: 4},
 			Size: common.Vec2{X: 30, Y: 57},
 		},
 		{
-			ID:   enums.ItemUndefined,
+			ID:   enums.ItemWood3,
 			Pos:  common.Vec2{X: 184, Y: 39},
 			Size: common.Vec2{X: 36, Y: 17},
 		},
@@ -24,17 +34,12 @@ var AtlasUtilityRoom = AtlasData{
 			Size: common.Vec2{X: 5, Y: 18},
 		},
 		{
-			ID:   enums.ItemUndefined,
+			ID:   enums.ItemWashingMachine,
 			Pos:  common.Vec2{X: 117, Y: 4},
 			Size: common.Vec2{X: 33, Y: 36},
 		},
 		{
-			ID:   enums.ItemUndefined,
-			Pos:  common.Vec2{X: 158, Y: 4},
-			Size: common.Vec2{X: 18, Y: 52},
-		},
-		{
-			ID:   enums.ItemUndefined,
+			ID:   enums.ItemWood,
 			Pos:  common.Vec2{X: 117, Y: 48},
 			Size: common.Vec2{X: 17, Y: 16},
 		},
@@ -44,24 +49,19 @@ var AtlasUtilityRoom = AtlasData{
 			Size: common.Vec2{X: 67, Y: 55},
 		},
 		{
-			ID:   enums.ItemUndefined,
-			Pos:  common.Vec2{X: 228, Y: 39},
-			Size: common.Vec2{X: 16, Y: 17},
-		},
-		{
-			ID:   enums.ItemUndefined,
+			ID:   enums.ItemBasket,
 			Pos:  common.Vec2{X: 184, Y: 4},
 			Size: common.Vec2{X: 27, Y: 27},
+		},
+		{
+			ID:   enums.ItemBroom,
+			Pos:  common.Vec2{X: 158, Y: 4},
+			Size: common.Vec2{X: 18, Y: 52},
 		},
 		{
 			ID:   enums.ItemLightSwitch,
 			Pos:  common.Vec2{X: 241, Y: 4},
 			Size: common.Vec2{X: 13, Y: 17},
-		},
-		{
-			ID:   enums.ItemUndefined,
-			Pos:  common.Vec2{X: 219, Y: 4},
-			Size: common.Vec2{X: 14, Y: 21},
 		},
 	},
 	Metadata: Metadata{

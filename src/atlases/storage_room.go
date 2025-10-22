@@ -9,14 +9,14 @@ import (
 var AtlasStorageRoom = AtlasData{
 	Frames: []FrameData{
 		{
-			ID:   enums.ItemRightDoor,
-			Pos:  common.Vec2{X: 355, Y: 4},
-			Size: common.Vec2{X: 4, Y: 65},
-		},
-		{
 			ID:   enums.ItemTires,
 			Pos:  common.Vec2{X: 201, Y: 52},
 			Size: common.Vec2{X: 35, Y: 22},
+		},
+		{
+			ID:   enums.ItemFilingCabinet,
+			Pos:  common.Vec2{X: 303, Y: 4},
+			Size: common.Vec2{X: 19, Y: 44},
 		},
 		{
 			ID:   enums.ItemBulb,
@@ -44,24 +44,24 @@ var AtlasStorageRoom = AtlasData{
 			Size: common.Vec2{X: 70, Y: 60},
 		},
 		{
-			ID:   enums.ItemFilingCabinet,
-			Pos:  common.Vec2{X: 303, Y: 4},
-			Size: common.Vec2{X: 19, Y: 44},
-		},
-		{
 			ID:   enums.ItemShelfSide,
 			Pos:  common.Vec2{X: 268, Y: 4},
 			Size: common.Vec2{X: 27, Y: 70},
 		},
 		{
-			ID:   enums.ItemBarrell,
-			Pos:  common.Vec2{X: 303, Y: 56},
-			Size: common.Vec2{X: 32, Y: 22},
-		},
-		{
 			ID:   enums.ItemLeftDoor,
 			Pos:  common.Vec2{X: 343, Y: 4},
 			Size: common.Vec2{X: 4, Y: 65},
+		},
+		{
+			ID:   enums.ItemRightDoor,
+			Pos:  common.Vec2{X: 355, Y: 4},
+			Size: common.Vec2{X: 4, Y: 65},
+		},
+		{
+			ID:   enums.ItemBarrell,
+			Pos:  common.Vec2{X: 303, Y: 56},
+			Size: common.Vec2{X: 32, Y: 22},
 		},
 	},
 	Metadata: Metadata{
