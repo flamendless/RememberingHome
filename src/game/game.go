@@ -8,6 +8,7 @@ import (
 	"remembering-home/src/conf"
 	"remembering-home/src/context"
 	"remembering-home/src/debug"
+	"remembering-home/src/enums"
 	"remembering-home/src/graphics"
 	"remembering-home/src/scenes"
 	"runtime"
@@ -117,14 +118,17 @@ func (g *Game_State) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (g *Game_State) NavigateToDummy() {
-	g.SceneManager.GoTo(scenes.NewDummyScene(g.Context, g.SceneManager))
-}
-
-func (g *Game_State) NavigateToSplash() {
-	g.SceneManager.GoTo(scenes.NewSplashScene(g.Context, g.SceneManager))
-}
-
-func (g *Game_State) NavigateToMainMenu() {
-	g.SceneManager.GoTo(scenes.NewMainMenuScene(g.Context, g.SceneManager))
+func (g *Game_State) NavigateTo(scene enums.Scene) {
+	switch scene {
+	case enums.SceneDummy:
+		g.SceneManager.GoTo(scenes.NewDummyScene(g.Context, g.SceneManager))
+	case enums.SceneSplash:
+		g.SceneManager.GoTo(scenes.NewSplashScene(g.Context, g.SceneManager))
+	case enums.SceneMainMenu:
+		g.SceneManager.GoTo(scenes.NewMainMenuScene(g.Context, g.SceneManager))
+	case enums.SceneStorageRoom:
+		g.SceneManager.GoTo(scenes.NewStorageRoomScene(g.Context, g.SceneManager))
+	default:
+		panic(fmt.Sprintf("Unknown scene: %s", scene))
+	}
 }

@@ -6,6 +6,7 @@ import (
 	"remembering-home/src/assets/shaders"
 	"remembering-home/src/conf"
 	"remembering-home/src/context"
+	"remembering-home/src/enums"
 	"runtime"
 
 	"github.com/ebitengine/debugui"
@@ -13,9 +14,7 @@ import (
 )
 
 type SceneNavigator interface {
-	NavigateToDummy()
-	NavigateToSplash()
-	NavigateToMainMenu()
+	NavigateTo(scene enums.Scene)
 }
 
 var sceneNavigator SceneNavigator
@@ -47,13 +46,16 @@ func UpdateDebugUI(context *context.GameContext, sceneName, sceneState string) e
 				ctx.Checkbox(&ShowLines, "Show Center Lines")
 				if sceneNavigator != nil {
 					ctx.Button("Go to Dummy").On(func() {
-						sceneNavigator.NavigateToDummy()
+						sceneNavigator.NavigateTo(enums.SceneDummy)
 					})
 					ctx.Button("Go to Splash").On(func() {
-						sceneNavigator.NavigateToSplash()
+						sceneNavigator.NavigateTo(enums.SceneSplash)
 					})
 					ctx.Button("Go to Main Menu").On(func() {
-						sceneNavigator.NavigateToMainMenu()
+						sceneNavigator.NavigateTo(enums.SceneMainMenu)
+					})
+					ctx.Button("Go to Storage Room").On(func() {
+						sceneNavigator.NavigateTo(enums.SceneStorageRoom)
 					})
 				}
 			})
