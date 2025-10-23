@@ -15,6 +15,7 @@ var (
 	WSLTricked          bool
 	ShowTexts           bool
 	ShowLines           bool
+	ShowItemSelection   bool
 	DebugUI             debugui.DebugUI
 	CurrentDebugShaders []shaders.ShaderUniforms
 )
@@ -30,6 +31,7 @@ const (
 
 func init() {
 	ShowTexts = conf.DEV
+	ShowItemSelection = conf.DEV
 }
 
 func FixWSLWindow() {

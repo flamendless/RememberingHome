@@ -14,6 +14,9 @@ const (
 	ActionMoveRight
 	ActionEnter
 	ActionBack
+	ActionZoomIn
+	ActionZoomOut
+	ActionZoomReset
 )
 
 type GameContext struct {

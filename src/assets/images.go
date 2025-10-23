@@ -19,6 +19,8 @@ const (
 	ImageBGHallway
 	ImageBGStorageRoom
 	ImageBGUtilityRoom
+	ImageAtlasStorageRoom
+	ImageAtlasUtilityRoom
 	TextureNoise
 	TextureFog
 	TexturePaper
@@ -38,29 +40,15 @@ func setImageResources(loader *resource.Loader) {
 		ImageBGDoor:     {Path: "main_menu/bg_door.png"},
 		ImageBGHallway:  {Path: "main_menu/bg_hallway.png"},
 
-		ImageBGStorageRoom: {Path: "atlases/storage_room/bg.png"},
-		ImageBGUtilityRoom: {Path: "atlases/utility_room/bg.png"},
+		ImageBGStorageRoom:    {Path: "atlases/storage_room/bg.png"},
+		ImageAtlasStorageRoom: {Path: "atlases/storage_room/atlas.png"},
+
+		ImageBGUtilityRoom:    {Path: "atlases/utility_room/bg.png"},
+		ImageAtlasUtilityRoom: {Path: "atlases/utility_room/atlas.png"},
 
 		TextureNoise: {Path: "textures/noise.png"},
 		TextureFog:   {Path: "textures/fog.png"},
 		TexturePaper: {Path: "textures/paper.png"},
-	}
-
-	_ = map[resource.ImageID]bool{
-		ImageNone:          false,
-		ImageDummy:         true,
-		ImageWindowIcon:    true,
-		ImageFlamLogo:      true,
-		ImageSheetWits:     true,
-		ImageSheetDesk:     true,
-		ImageSheetTitle:    true,
-		ImageBGDoor:        true,
-		ImageBGHallway:     true,
-		ImageBGStorageRoom: true,
-		ImageBGUtilityRoom: true,
-		TextureNoise:       true,
-		TextureFog:         true,
-		TexturePaper:       true,
 	}
 
 	for id, res := range imageResources {

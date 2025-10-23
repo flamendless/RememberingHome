@@ -546,4 +546,8 @@ func (scene *Main_Menu_Scene) Draw(screen *ebiten.Image) {
 	scene.LayerColorize.RenderWithShader(screen)
 }
 
+func (scene *Main_Menu_Scene) GetItemRenderer() *graphics.ItemRenderer {
+	return nil
+}
+
 var _ Scene = (*Main_Menu_Scene)(nil)

@@ -3,6 +3,8 @@ package graphics
 import (
 	"image"
 	"math"
+	"remembering-home/src/atlases"
+	"remembering-home/src/enums"
 	"remembering-home/src/errs"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -151,4 +153,41 @@ func (ap *AnimationPlayer) Update() {
 	}
 
 	ap.CurrentFrame = dataAnim.Frames[ap.CurrentFrameIndex]
+}
+
+func NewAnimationPlayerFromAtlas(
+	atlasTexture *ebiten.Image,
+	frameData atlases.FrameData,
+) *AnimationPlayer {
+	x := int(frameData.Pos.X)
+	y := int(frameData.Pos.Y)
+	w := int(frameData.Size.X)
+	h := int(frameData.Size.Y)
+
+	frameRect := image.Rect(x, y, x+w, y+h)
+	subImage := atlasTexture.SubImage(frameRect).(*ebiten.Image)
+
+	player := NewAnimationPlayer(atlasTexture)
+	anim := &Animation{
+		Name:   string(frameData.ID),
+		Frames: []*ebiten.Image{subImage},
+		FPS:    0,
+	}
+	player.AddAnimation(anim)
+	player.SetStateReset(string(frameData.ID))
+	player.PauseAtFrame(0)
+	player.Update()
+
+	return player
+}
+
+func NewAnimationPlayersFromAtlas(
+	atlasTexture *ebiten.Image,
+	atlasData atlases.AtlasData,
+) map[enums.Item]*AnimationPlayer {
+	players := make(map[enums.Item]*AnimationPlayer)
+	for _, frameData := range atlasData.Frames {
+		players[frameData.ID] = NewAnimationPlayerFromAtlas(atlasTexture, frameData)
+	}
+	return players
 }

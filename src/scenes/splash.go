@@ -132,4 +132,8 @@ func (scene *Splash_Scene) Draw(screen *ebiten.Image) {
 	}
 }
 
+func (scene *Splash_Scene) GetItemRenderer() *graphics.ItemRenderer {
+	return nil
+}
+
 var _ Scene = (*Splash_Scene)(nil)

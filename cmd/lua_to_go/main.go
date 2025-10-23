@@ -482,9 +482,7 @@ func generateItemCode(data []items.ItemData, varName string) ([]byte, error) {
 		if item.Z != 0 {
 			buf.WriteString(fmt.Sprintf("\t\tZ: %d,\n", item.Z))
 		}
-		if item.Scale != 1.0 {
-			buf.WriteString(fmt.Sprintf("\t\tScale: %g,\n", item.Scale))
-		}
+		buf.WriteString(fmt.Sprintf("\t\tScale: %g,\n", item.Scale))
 		if item.NoCol {
 			buf.WriteString("\t\tNoCol: true,\n")
 		}
@@ -535,9 +533,7 @@ func generateItemCode(data []items.ItemData, varName string) ([]byte, error) {
 				if subItem.Z != 0 {
 					buf.WriteString(fmt.Sprintf("\t\t\t\tZ: %d,\n", subItem.Z))
 				}
-				if subItem.Scale != 1.0 {
-					buf.WriteString(fmt.Sprintf("\t\t\t\tScale: %g,\n", subItem.Scale))
-				}
+				buf.WriteString(fmt.Sprintf("\t\t\t\tScale: %g,\n", subItem.Scale))
 				buf.WriteString("\t\t\t},\n")
 			}
 			buf.WriteString("\t\t},\n")

@@ -2,6 +2,7 @@ package scenes
 
 import (
 	"remembering-home/src/context"
+	"remembering-home/src/graphics"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -33,6 +34,10 @@ func (scene *Intro_Scene) Update() error {
 }
 
 func (scene *Intro_Scene) Draw(screen *ebiten.Image) {
+}
+
+func (scene *Intro_Scene) GetItemRenderer() *graphics.ItemRenderer {
+	return nil
 }
 
 var _ Scene = (*Intro_Scene)(nil)

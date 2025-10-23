@@ -93,7 +93,6 @@ func (s *Scene_Manager) IsFading() bool {
 	return s.next != nil
 }
 
-// Debug methods for accessing internal state
 func (s *Scene_Manager) GetFader() *effects.Fader {
 	return s.fader
 }

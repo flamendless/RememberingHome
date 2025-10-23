@@ -27,7 +27,8 @@ func main() {
 
 	// sceneManager.GoTo(scenes.NewDummyScene(gameState.Context, sceneManager))
 	// sceneManager.GoTo(scenes.NewSplashScene(gameState.Context, sceneManager))
-	sceneManager.GoTo(scenes.NewMainMenuScene(gameState.Context, sceneManager))
+	// sceneManager.GoTo(scenes.NewMainMenuScene(gameState.Context, sceneManager))
+	sceneManager.GoTo(scenes.NewStorageRoomScene(gameState.Context, sceneManager))
 
 	if err := ebiten.RunGame(gameState); err != nil {
 		if errors.Is(err, errs.ErrQuit) {

@@ -7,7 +7,9 @@ import (
 	"remembering-home/src/conf"
 	"remembering-home/src/context"
 	"remembering-home/src/enums"
+	"remembering-home/src/graphics"
 	"runtime"
+	"sort"
 
 	"github.com/ebitengine/debugui"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -18,44 +20,106 @@ type SceneNavigator interface {
 }
 
 var sceneNavigator SceneNavigator
+var zoomLevel float64 = 1.0
 
 func SetSceneNavigator(navigator SceneNavigator) {
 	sceneNavigator = navigator
 }
 
-func UpdateDebugUI(context *context.GameContext, sceneName, sceneState string) error {
+func GetZoomLevel() float64 {
+	return zoomLevel
+}
+
+func SetZoomLevel(level float64) {
+	zoomLevel = level
+}
+
+func UpdateDebugUI(context *context.GameContext, sceneName, sceneState string, itemRenderer *graphics.ItemRenderer) error {
 	if !ShowTexts {
 		return nil
 	}
 
 	_, err := DebugUI.Update(func(ctx *debugui.Context) error {
-		ctx.Window("Debug Overlay", image.Rect(10, 10, 300, 300), func(layout debugui.ContainerLayout) {
+		ctx.Window("Debug Overlay", image.Rect(10, 10, 300, 500), func(layout debugui.ContainerLayout) {
 			ctx.Text(fmt.Sprintf("OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
 			ctx.Text(fmt.Sprintf("Version/Dev: %s/%v", conf.GAME_VERSION, conf.DEV))
 			ctx.Text(fmt.Sprintf("FPS: %.2f", ebiten.ActualFPS()))
 			ctx.Text(fmt.Sprintf("TPS: %.2f", ebiten.ActualTPS()))
 			ctx.Text(fmt.Sprintf("Mode/Quality: %s, %s", context.Settings.Window.String(), context.Settings.Quality.String()))
 			ctx.Text(fmt.Sprintf("Volume/Music: %d, %d", context.Settings.Volume, context.Settings.Music))
+			ctx.Text(fmt.Sprintf("Zoom Level: %.2fx", zoomLevel))
+
+			// Mouse coordinates
+			cursorX, cursorY := ebiten.CursorPosition()
+			ctx.Text(fmt.Sprintf("Mouse: (%d, %d)", cursorX, cursorY))
 
 			// Scene information
 			ctx.Text(fmt.Sprintf("Scene: %s", sceneName))
 			ctx.Text(fmt.Sprintf("State: %s", sceneState))
 
+			// ItemRenderer information
+			if itemRenderer != nil {
+				ctx.Header("ItemRenderer Info", false, func() {
+					ctx.Text(fmt.Sprintf("Item Count: %d", itemRenderer.GetItemCount()))
+
+					itemIDs := make([]enums.Item, 0, len(itemRenderer.FrameDataMap))
+					for itemID := range itemRenderer.FrameDataMap {
+						itemIDs = append(itemIDs, itemID)
+					}
+
+					sort.Slice(itemIDs, func(i, j int) bool {
+						return string(itemIDs[i]) < string(itemIDs[j])
+					})
+
+					for _, itemID := range itemIDs {
+						ctx.Header(string(itemID), false, func() {
+							if item, exists := itemRenderer.ItemMap[itemID]; exists {
+								if item.Name != "" {
+									ctx.Text(fmt.Sprintf("Name: %s", item.Name))
+								}
+								ctx.Text(fmt.Sprintf("X: %.0f", item.Pos.X))
+								ctx.Text(fmt.Sprintf("Y: %.0f", item.Pos.Y))
+								ctx.Text(fmt.Sprintf("Scale: %.2f", item.Scale))
+							}
+						})
+					}
+				})
+			} else {
+				ctx.Text("No ItemRenderer in current scene")
+			}
+
 			// Debug controls
 			ctx.Header("Debug Controls", false, func() {
-				ctx.Checkbox(&ShowLines, "Show Center Lines")
+				ctx.Checkbox(&ShowLines, "Center Lines")
+				ctx.Checkbox(&ShowItemSelection, "Item Selection")
+
+				// Zoom controls
+				ctx.Header("Zoom Controls", false, func() {
+					ctx.Button("Zoom In (+0.1)").On(func() {
+						newZoom := zoomLevel + 0.1
+						if newZoom <= 3.0 {
+							zoomLevel = newZoom
+						}
+					})
+					ctx.Button("Zoom Out (-0.1)").On(func() {
+						newZoom := zoomLevel - 0.1
+						if newZoom >= 0.1 {
+							zoomLevel = newZoom
+						}
+					})
+					ctx.Button("Reset Zoom (1.0)").On(func() {
+						zoomLevel = 1.0
+					})
+					ctx.Text("Zoom Range: 0.1x - 3.0x")
+					ctx.Text("Keyboard: =/- to zoom, 0 to reset")
+				})
+
 				if sceneNavigator != nil {
-					ctx.Button("Go to Dummy").On(func() {
-						sceneNavigator.NavigateTo(enums.SceneDummy)
-					})
-					ctx.Button("Go to Splash").On(func() {
-						sceneNavigator.NavigateTo(enums.SceneSplash)
-					})
-					ctx.Button("Go to Main Menu").On(func() {
-						sceneNavigator.NavigateTo(enums.SceneMainMenu)
-					})
-					ctx.Button("Go to Storage Room").On(func() {
-						sceneNavigator.NavigateTo(enums.SceneStorageRoom)
+					ctx.Header("Go to", false, func() {
+						ctx.Button("Dummy").On(func() { sceneNavigator.NavigateTo(enums.SceneDummy) })
+						ctx.Button("Splash").On(func() { sceneNavigator.NavigateTo(enums.SceneSplash) })
+						ctx.Button("Main Menu").On(func() { sceneNavigator.NavigateTo(enums.SceneMainMenu) })
+						ctx.Button("Storage Room").On(func() { sceneNavigator.NavigateTo(enums.SceneStorageRoom) })
 					})
 				}
 			})
